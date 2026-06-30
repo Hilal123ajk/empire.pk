@@ -1,0 +1,181 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreProductRequest;
+use App\Http\Requests\Admin\UpdateProductRequest;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductImage;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+
+class ProductController extends Controller
+{
+    public function index(): View
+    {
+        $search = request()->string('search')->trim()->toString();
+        $categoryId = request()->integer('category_id') ?: null;
+        $brandId = request()->integer('brand_id') ?: null;
+        $status = request()->string('status')->toString();
+
+        $products = Product::query()
+            ->with([
+                'category:id,title,slug',
+                'brand:id,title,slug',
+                'images' => fn ($query) => $query->orderBy('sort_order'),
+            ])
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%");
+                });
+            })
+            ->when($categoryId, fn ($query) => $query->where('category_id', $categoryId))
+            ->when($brandId, fn ($query) => $query->where('brand_id', $brandId))
+            ->when($status === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($status === 'inactive', fn ($query) => $query->where('is_active', false))
+            ->when($status === 'low', fn ($query) => $query->where('stock_quantity', '<=', 10))
+            ->orderByDesc('created_at')
+            ->get();
+
+        $categories = Category::query()->where('is_active', true)->orderBy('title')->get(['id', 'title']);
+        $brands = Brand::query()->where('is_active', true)->orderBy('title')->get(['id', 'title']);
+
+        return view('admin.products.index', compact(
+            'products',
+            'categories',
+            'brands',
+            'search',
+            'categoryId',
+            'brandId',
+            'status',
+        ));
+    }
+
+    public function store(StoreProductRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        $data['image_url'] = $request->file('image')->store('products', 'public');
+        unset($data['image'], $data['gallery_images'], $data['gallery_labels'], $data['remove_gallery_ids']);
+
+        if (empty($data['slug'])) {
+            unset($data['slug']);
+        }
+
+        if (empty($data['brand_id'])) {
+            $data['brand_id'] = null;
+        }
+
+        $product = Product::query()->create($data);
+        $this->storeGalleryImages($product, $request);
+
+        return redirect()
+            ->route('admin.products', $request->only(['search', 'category_id', 'brand_id', 'status']))
+            ->with('success', 'Product created successfully.');
+    }
+
+    public function update(UpdateProductRequest $request, Product $product): RedirectResponse
+    {
+        $data = $request->validated();
+
+        if ($request->hasFile('image')) {
+            $existingPath = $product->getStoredImagePath();
+
+            if ($existingPath !== '' && ! str_starts_with($existingPath, 'http')) {
+                Storage::disk('public')->delete($existingPath);
+            }
+
+            $data['image_url'] = $request->file('image')->store('products', 'public');
+        }
+
+        unset($data['image'], $data['gallery_images'], $data['gallery_labels'], $data['remove_gallery_ids']);
+
+        if (array_key_exists('slug', $data) && $data['slug'] === '') {
+            unset($data['slug']);
+        }
+
+        if (empty($data['brand_id'])) {
+            $data['brand_id'] = null;
+        }
+
+        $product->update($data);
+        $this->syncGalleryLabels($product, $request);
+        $this->removeGalleryImages($product, $request);
+        $this->storeGalleryImages($product, $request);
+
+        return redirect()
+            ->route('admin.products', $request->only(['search', 'category_id', 'brand_id', 'status']))
+            ->with('success', 'Product updated successfully.');
+    }
+
+    public function destroy(Product $product): RedirectResponse
+    {
+        $product->delete();
+
+        return redirect()
+            ->route('admin.products', request()->only(['search', 'category_id', 'brand_id', 'status']))
+            ->with('success', 'Product deleted successfully.');
+    }
+
+    private function storeGalleryImages(Product $product, Request $request): void
+    {
+        if (! $request->hasFile('gallery_images')) {
+            return;
+        }
+
+        $labels = $request->input('gallery_labels', []);
+        $sortOrder = (int) $product->images()->max('sort_order');
+
+        foreach ($request->file('gallery_images') as $index => $file) {
+            if (! $file instanceof UploadedFile || ! $file->isValid()) {
+                continue;
+            }
+
+            $sortOrder++;
+
+            $product->images()->create([
+                'image_url' => $file->store('products/gallery', 'public'),
+                'label' => is_array($labels) ? ($labels[$index] ?? null) : null,
+                'sort_order' => $sortOrder,
+            ]);
+        }
+    }
+
+    private function syncGalleryLabels(Product $product, Request $request): void
+    {
+        $labels = $request->input('gallery_labels', []);
+
+        if (! is_array($labels)) {
+            return;
+        }
+
+        foreach ($labels as $imageId => $label) {
+            $product->images()
+                ->where('id', (int) $imageId)
+                ->update(['label' => $label !== '' ? $label : null]);
+        }
+    }
+
+    private function removeGalleryImages(Product $product, Request $request): void
+    {
+        $removeIds = $request->input('remove_gallery_ids', []);
+
+        if (! is_array($removeIds) || $removeIds === []) {
+            return;
+        }
+
+        $product->images()
+            ->whereIn('id', array_map('intval', $removeIds))
+            ->get()
+            ->each(fn (ProductImage $image) => $image->delete());
+    }
+}

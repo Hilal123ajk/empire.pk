@@ -1,0 +1,163 @@
+{{-- Top announcement bar --}}
+<div class="bg-navy-900 text-white text-xs sm:text-sm">
+    <div class="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+        <p class="flex items-center gap-2">
+            <span class="hidden sm:inline">Welcome to</span>
+            <span class="font-semibold text-empire-400">Empire.pk</span>
+            <span class="hidden md:inline text-gray-400">| Premium Mobile Accessories</span>
+        </p>
+        <div class="flex items-center gap-4 text-gray-300">
+            <span class="hidden sm:flex items-center gap-1">
+                <svg class="w-4 h-4 text-empire-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                Free delivery on orders above Rs. 2,500
+            </span>
+            <a href="tel:0421113647" class="hover:text-empire-400 transition">042-111-EMPIRE</a>
+        </div>
+    </div>
+</div>
+
+{{-- Delivery bar --}}
+<div class="bg-white border-b border-gray-200 text-sm" x-data="{ city: localStorage.getItem('empire_city') || 'Lahore', showModal: false }">
+    <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <button @click="showModal = true" class="flex items-center gap-2 text-gray-700 hover:text-navy-900 transition group">
+            <svg class="w-5 h-5 text-empire-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>Deliver to: <strong x-text="city" class="text-navy-900"></strong></span>
+            <svg class="w-4 h-4 text-gray-400 group-hover:text-navy-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="flex items-center gap-4 text-xs sm:text-sm text-gray-600">
+            <span class="flex items-center gap-1">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                Cash on Delivery Available
+            </span>
+            <span class="hidden sm:inline">|</span>
+            <span class="hidden sm:inline">7-Day Easy Returns</span>
+        </div>
+    </div>
+
+    {{-- City modal --}}
+    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50" @keydown.escape.window="showModal = false">
+        <div @click.outside="showModal = false" class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-navy-900 mb-4">Select Delivery City</h3>
+            <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                @foreach(['Lahore', 'Islamabad', 'Rawalpindi', 'Karachi', 'Faisalabad', 'Multan', 'Sialkot', 'Gujranwala'] as $c)
+                <button @click="city = '{{ $c }}'; localStorage.setItem('empire_city', '{{ $c }}'); showModal = false"
+                        :class="city === '{{ $c }}' ? 'bg-navy-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                        class="px-3 py-2.5 rounded-lg text-sm font-medium transition">{{ $c }}</button>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Main header --}}
+<header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm" x-data="{ mobileMenu: false, mobileSearch: false }">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex items-center gap-3 py-3 md:py-4">
+            {{-- Left: menu + logo --}}
+            <div class="flex items-center gap-0.5 sm:gap-2 shrink-0 min-w-0">
+                <button @click="mobileMenu = !mobileMenu" class="lg:hidden p-2 -ml-2 text-gray-600 hover:text-navy-900" aria-label="Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+
+                <a href="{{ url('/') }}" class="flex items-center gap-2 shrink-0">
+                    <div class="w-10 h-10 bg-navy-900 rounded-xl flex items-center justify-center">
+                        <span class="text-empire-400 font-extrabold text-lg">E</span>
+                    </div>
+                    <div class="hidden sm:block">
+                        <span class="text-xl font-extrabold text-navy-900 tracking-tight">Empire<span class="text-empire-500">.pk</span></span>
+                        <p class="text-[10px] text-gray-500 -mt-0.5 tracking-wide uppercase">Mobile Accessories</p>
+                    </div>
+                </a>
+            </div>
+
+            {{-- Search (desktop) --}}
+            <form action="{{ url('/products') }}" method="GET" class="hidden md:flex flex-1 max-w-xl mx-4">
+                <div class="relative w-full">
+                    <input type="search" name="q" placeholder="Search cases, chargers, screen protectors..."
+                           class="w-full pl-4 pr-12 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500 focus:border-transparent transition">
+                    <button type="submit" class="absolute right-1 top-1 bottom-1 px-3 bg-navy-900 text-white rounded-lg hover:bg-navy-800 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </button>
+                </div>
+            </form>
+
+            {{-- Actions --}}
+            <div class="flex items-center gap-1 sm:gap-3 ml-auto shrink-0">
+                <button @click="mobileSearch = !mobileSearch" class="md:hidden p-2 text-gray-600 hover:text-navy-900" aria-label="Search">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </button>
+                <a href="#" class="hidden sm:flex items-center gap-1.5 p-2 text-gray-600 hover:text-navy-900 transition text-sm">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span class="hidden lg:inline font-medium">Account</span>
+                </a>
+                <button type="button" @click="$store.cart.openDrawer()" class="relative flex items-center gap-1.5 p-2 text-gray-600 hover:text-navy-900 transition" aria-label="Open cart">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    <span class="hidden lg:inline text-sm font-medium">Cart</span>
+                    <span x-show="$store.cart.count > 0"
+                          x-text="$store.cart.count"
+                          class="absolute -top-0.5 -right-0.5 lg:static lg:ml-0 min-w-[20px] h-5 px-1.5 bg-empire-500 text-white text-xs font-bold rounded-full flex items-center justify-center"></span>
+                </button>
+            </div>
+        </div>
+
+        {{-- Mobile search --}}
+        <div x-show="mobileSearch" x-cloak class="md:hidden pb-3">
+            <form action="{{ url('/products') }}" method="GET">
+                <input type="search" name="q" placeholder="Search products..."
+                       class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">
+            </form>
+        </div>
+    </div>
+
+    {{-- Navigation --}}
+    <nav class="border-t border-gray-100 bg-gray-50/80 hidden lg:block">
+        <div class="max-w-7xl mx-auto px-4">
+            <ul class="flex items-center gap-1 py-0 overflow-x-auto scrollbar-hide">
+                <li>
+                    <a href="{{ url('/phone-accessories') }}"
+                       class="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-navy-900 hover:bg-white hover:text-empire-600 transition border-b-2 border-transparent hover:border-empire-500 whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg>
+                        All Accessories
+                    </a>
+                </li>
+                @foreach(array_slice($storeCatalogCategories ?? [], 0, 8) as $nav)
+                <li>
+                    <a href="{{ url('/categories/' . $nav['slug']) }}"
+                       class="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-navy-900 hover:bg-white transition whitespace-nowrap">
+                        {{ $nav['name'] }}
+                    </a>
+                </li>
+                @endforeach
+                <li>
+                    <a href="{{ url('/products?sort=discount') }}"
+                       class="block px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition whitespace-nowrap">
+                        🔥 Deals
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    {{-- Mobile menu drawer --}}
+    <div x-show="mobileMenu" x-cloak class="lg:hidden fixed inset-0 z-50">
+        <div @click="mobileMenu = false" class="absolute inset-0 bg-black/50"></div>
+        <div class="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl overflow-y-auto">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <span class="font-bold text-navy-900">Menu</span>
+                <button @click="mobileMenu = false" class="p-2 text-gray-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-4 space-y-1">
+                <a href="{{ url('/') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">Home</a>
+                <a href="{{ url('/phone-accessories') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">Phone Accessories</a>
+                <a href="{{ url('/products') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">All Products</a>
+                <hr class="my-3 border-gray-200">
+                <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Categories</p>
+                @foreach($storeCatalogCategories ?? [] as $nav)
+                <a href="{{ url('/categories/' . $nav['slug']) }}" class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">{{ $nav['name'] }}</a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</header>

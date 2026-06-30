@@ -1,0 +1,616 @@
+# Cursor Rules - empire.pk (Laravel 13)
+# E-commerce Platform for Mobile Accessories
+# Last Updated: June 2026
+
+## PROJECT OVERVIEW
+**Project Name**: empire.pk
+**Framework**: Laravel 13
+**Current Focus**: Mobile Accessories (phone cases, screen protectors, iPad covers, AirBuds, cleaning spray, etc.)
+**Future Extension**: Furniture and other product categories
+
+---
+
+## 1. DATABASE OPTIMIZATION & STRUCTURE
+
+### Indexing Strategy
+- **Create indexes ONLY when necessary**:
+  - Foreign keys (always indexed for performance)
+  - Columns used in WHERE clauses (especially for products, categories, users)
+  - Columns used in JOIN conditions
+  - High-frequency search/filter columns (category_id, brand, price range)
+  - Timestamp columns if used for sorting/filtering (created_at, updated_at)
+  
+- **Avoid unnecessary indexes** on:
+  - Columns with low cardinality
+  - Columns rarely queried
+  - Boolean flags (unless frequently filtered)
+  - Columns that cause significant write performance degradation
+
+### Query Optimization
+- **Prevent N+1 Query Problems**:
+  ```php
+  // BAD
+  $products = Product::all();
+  foreach ($products as $product) {
+      echo $product->category->name; // N+1 problem
+  }
+  
+  // GOOD
+  $products = Product::with('category', 'images', 'reviews')->get();
+  ```
+  
+- **Use selective loading**: Load only required relationships
+  ```php
+  $products = Product::with('category:id,name', 'images:id,product_id,url')->get();
+  ```
+
+- **Use pagination for large datasets**:
+  ```php
+  $products = Product::with('category')->paginate(12);
+  ```
+
+- **Eager load reviews/ratings cautiously**: Consider pagination or aggregated counts
+  ```php
+  $product = Product::withCount('reviews')
+      ->with('category', 'images')
+      ->find($id);
+  ```
+
+### Database Schema Conventions
+```
+Products Table:
+- id, name, slug, description, sku, category_id, brand
+- price, cost_price, discount_percentage
+- stock_quantity, is_active
+- meta_title, meta_description, meta_keywords (for SEO)
+- image_url, product_image (featured image)
+- created_at, updated_at
+- Indexes: category_id, brand, is_active, created_at
+
+ProductImages Table:
+- id, product_id, image_url, alt_text, is_featured
+- Indexes: product_id
+
+Categories Table:
+- id, name, slug, description, image_url
+- meta_title, meta_description
+- parent_id (for nested categories)
+- Indexes: parent_id
+
+Orders Table:
+- id, user_id, total_amount, status, payment_status
+- created_at, updated_at
+- Indexes: user_id, status, created_at
+
+OrderItems Table:
+- id, order_id, product_id, quantity, price
+- Indexes: order_id, product_id
+```
+
+---
+
+## 2. LARAVEL ARCHITECTURE & BEST PRACTICES
+
+### Project Structure
+**Recommendation**: Use **Repository Pattern** for this e-commerce project
+- Repositories provide clean separation between data access and business logic
+- Easier to switch database implementations if needed
+- Ideal for complex queries (filters, searches, sorting)
+
+```
+app/
+├── Models/
+│   ├── Product.php
+│   ├── Category.php
+│   ├── Order.php
+│   ├── User.php
+│   └── ...
+├── Repositories/
+│   ├── Contracts/
+│   │   ├── ProductRepositoryInterface.php
+│   │   └── OrderRepositoryInterface.php
+│   ├── ProductRepository.php
+│   ├── OrderRepository.php
+│   └── ...
+├── Services/
+│   ├── ProductService.php
+│   ├── OrderService.php
+│   └── SitemapService.php
+├── Http/
+│   ├── Controllers/
+│   │   ├── ProductController.php
+│   │   ├── Admin/
+│   │   │   ├── ProductController.php
+│   │   │   ├── OrderController.php
+│   │   │   ├── CategoryController.php
+│   │   │   └── DashboardController.php
+│   │   └── ...
+│   └── Requests/
+│       ├── StoreProductRequest.php
+│       └── ...
+├── Traits/
+│   └── HasSeoMetadata.php
+└── Helpers/
+    └── SeoHelper.php
+```
+
+### Code Style
+- Use **type hints** for all methods
+- Use **strict types** at the top of files: `declare(strict_types=1);`
+- Follow **PSR-12** coding standards
+- Use meaningful variable and method names
+- Document complex business logic with comments
+
+### Model Relationships
+```php
+// Product Model
+public function category() { return $this->belongsTo(Category::class); }
+public function images() { return $this->hasMany(ProductImage::class); }
+public function reviews() { return $this->hasMany(Review::class); }
+public function orderItems() { return $this->hasMany(OrderItem::class); }
+
+// Category Model
+public function products() { return $this->hasMany(Product::class); }
+public function children() { return $this->hasMany(Category::class, 'parent_id'); }
+public function parent() { return $this->belongsTo(Category::class, 'parent_id'); }
+
+// Order Model
+public function items() { return $this->hasMany(OrderItem::class); }
+public function user() { return $this->belongsTo(User::class); }
+```
+
+### Caching Strategy
+```php
+// Cache product listings
+$products = Cache::remember('products.all', 3600, function () {
+    return Product::with('category', 'images')->where('is_active', true)->get();
+});
+
+// Clear cache when products updated
+Product::created(fn($product) => Cache::flush('products.*'));
+```
+
+---
+
+## 3. SEO OPTIMIZATION (CRITICAL)
+
+### Meta Tags Implementation
+**Every product page must have**:
+- `meta_title` (50-60 characters)
+- `meta_description` (150-160 characters)
+- `meta_keywords` (3-5 relevant keywords)
+- `og:title`, `og:description`, `og:image` (Open Graph - Facebook)
+- `twitter:title`, `twitter:description`, `twitter:image` (Twitter)
+- `canonical` URL
+- Structured data (JSON-LD for products)
+
+### Database Fields for SEO
+```php
+// In products migration
+Schema::create('products', function (Blueprint $table) {
+    // ... other fields
+    $table->string('meta_title')->nullable();
+    $table->text('meta_description')->nullable();
+    $table->string('meta_keywords')->nullable();
+    $table->string('og_title')->nullable();
+    $table->text('og_description')->nullable();
+    $table->string('og_image')->nullable();
+    $table->string('twitter_title')->nullable();
+    $table->text('twitter_description')->nullable();
+    $table->string('twitter_image')->nullable();
+});
+```
+
+### Blade Template Example
+```blade
+<meta name="title" content="{{ $product->meta_title ?? $product->name }}">
+<meta name="description" content="{{ $product->meta_description }}">
+<meta name="keywords" content="{{ $product->meta_keywords }}">
+
+<!-- Open Graph Meta Tags -->
+<meta property="og:type" content="product">
+<meta property="og:title" content="{{ $product->og_title ?? $product->name }}">
+<meta property="og:description" content="{{ $product->og_description }}">
+<meta property="og:image" content="{{ asset('storage/' . $product->og_image) }}">
+<meta property="og:url" content="{{ route('product.show', $product->slug) }}">
+
+<!-- Twitter Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $product->twitter_title ?? $product->name }}">
+<meta name="twitter:description" content="{{ $product->twitter_description }}">
+<meta name="twitter:image" content="{{ asset('storage/' . $product->twitter_image) }}">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="{{ route('product.show', $product->slug) }}">
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": "{{ $product->name }}",
+    "image": "{{ asset('storage/' . $product->image_url) }}",
+    "description": "{{ $product->meta_description }}",
+    "brand": { "@type": "Brand", "name": "{{ $product->brand }}" },
+    "offers": {
+        "@type": "Offer",
+        "price": "{{ $product->price }}",
+        "priceCurrency": "PKR"
+    }
+}
+</script>
+```
+
+### Sitemap Generation
+- **Use package**: `spatie/laravel-sitemap`
+- **Generate command**: `php artisan sitemap:generate`
+- **Sitemap must include**:
+  - Homepage (priority: 1.0)
+  - Category pages (priority: 0.9)
+  - All active product pages (priority: 0.8)
+  - Product images in sitemap
+  - Last modified timestamp
+
+```php
+// In routes/web.php or dedicated SitemapController
+Route::get('/sitemap.xml', 'SitemapController@index');
+
+// SitemapController
+public function index()
+{
+    $sitemap = Sitemap::create()
+        ->add(Url::create('/')->setPriority(1.0))
+        ->add(Category::where('is_active', true)->get()->map(function($category) {
+            return Url::create(route('category.show', $category->slug))
+                ->setPriority(0.9)
+                ->setLastModificationDate($category->updated_at);
+        }))
+        ->add(Product::where('is_active', true)->get()->map(function($product) {
+            return Url::create(route('product.show', $product->slug))
+                ->setPriority(0.8)
+                ->setLastModificationDate($product->updated_at)
+                ->addImage($product->image_url);
+        }));
+    
+    return response($sitemap->render(), 200, ['Content-Type' => 'application/xml']);
+}
+```
+
+### URL Structure
+- Use **slugs** for products: `/products/{category-slug}/{product-slug}`
+- Category URLs: `/categories/{category-slug}`
+- Ensure URLs are SEO-friendly, lowercase, hyphenated
+
+---
+
+## 4. ADMIN PANEL & AUTHENTICATION
+
+### Seeder Accounts
+```php
+// DatabaseSeeder.php
+User::create([
+    'name' => 'Admin',
+    'email' => 'admin@empire.pk.com',
+    'password' => Hash::make('password'),
+    'role' => 'admin',
+]);
+
+User::create([
+    'name' => 'Manager',
+    'email' => 'manager@empire.pk.com',
+    'password' => Hash::make('password'),
+    'role' => 'manager',
+]);
+```
+
+### Admin Dashboard Requirements
+- **Orders Widget**: Total orders today, this week, this month
+- **Revenue Widget**: Total revenue, with comparison graphs
+- **Customers Widget**: New customers count
+- **Products Widget**: Low stock alerts, bestsellers
+- **Quick Actions**: Add product, add category, view recent orders
+
+### Admin Features
+- Product CRUD (with bulk upload)
+- Category management (with nested categories)
+- Order management with status tracking
+- Customer management
+- Analytics dashboard
+- Seeder data import
+
+### Middleware
+```php
+// Admin route protection
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::prefix('admin')->name('admin.')->group(function () {
+        // Admin routes here
+    });
+});
+```
+
+---
+
+## 5. CLIENT-SIDE (FRONTEND) GUIDELINES
+
+### Technology Stack
+- **Tailwind CSS**: CDN version (not npm build)
+- **Alpine.js**: For interactivity without page reload
+- **Responsive Design**: Mobile-first approach
+
+### Tailwind CDN Setup
+```html
+<!-- In base layout -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+```
+
+### Mobile-First Design Principles
+- **Breakpoints Priority**: `mobile → tablet → desktop`
+- **Touch-friendly**: Minimum 44px tap targets
+- **Performance**: Lazy load images, minimal CSS
+- **Images**: Use `srcset` for responsive images
+- **Forms**: Large input fields, clear labels
+
+### Image Optimization
+```blade
+<!-- Use picture element with srcset -->
+<picture>
+    <source media="(min-width: 768px)" srcset="{{ asset('storage/'.$product->image_url) }}">
+    <img src="{{ asset('storage/'.$product->image_mobile) }}" alt="{{ $product->name }}">
+</picture>
+
+<!-- Or use responsive classes -->
+<img class="w-full md:w-1/2 lg:w-1/3" src="{{ asset('storage/'.$product->image_url) }}" alt="{{ $product->name }}">
+```
+
+### Product Listing Page
+```html
+<!-- Grid with mobile responsiveness -->
+<div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    @foreach($products as $product)
+        <div class="bg-white rounded-lg overflow-hidden shadow">
+            <!-- Image -->
+            <img src="{{ asset('storage/'.$product->image_url) }}" 
+                 alt="{{ $product->name }}"
+                 loading="lazy"
+                 class="w-full h-48 object-cover">
+            
+            <!-- Content -->
+            <div class="p-3">
+                <h3 class="text-sm font-semibold text-gray-900">{{ $product->name }}</h3>
+                <p class="text-xs text-gray-500">{{ $product->brand }}</p>
+                <p class="text-lg font-bold text-green-600 mt-2">Rs. {{ $product->price }}</p>
+                <button class="w-full bg-blue-600 text-white py-2 rounded mt-2 text-sm">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+    @endforeach
+</div>
+```
+
+### Alpine.js for Interactivity
+```blade
+<!-- Product filter with Alpine -->
+<div x-data="{ 
+    minPrice: 0, 
+    maxPrice: 50000,
+    category: '',
+    brand: ''
+}">
+    <input type="range" x-model="minPrice" class="w-full">
+    <input type="range" x-model="maxPrice" class="w-full">
+    <button @click="filterProducts()">Filter</button>
+</div>
+
+<!-- Cart counter -->
+<span x-text="cartCount" class="bg-red-500 text-white rounded-full px-2">0</span>
+```
+
+---
+
+## 6. PERFORMANCE CONSIDERATIONS
+
+### Page Load Optimization
+- Implement **lazy loading** for product images
+- Use **pagination** (12-24 items per page)
+- Cache category listings (3600 seconds)
+- Cache bestseller products (1800 seconds)
+- Minify CSS/JavaScript
+
+### Database Queries
+- Always use `select()` to load only needed columns
+- Use `pluck()` for single column results
+- Implement query logging in development
+- Monitor slow queries (> 100ms)
+
+```php
+// Bad
+$products = Product::all();
+
+// Good
+$products = Product::select('id', 'name', 'slug', 'price', 'image_url')
+    ->where('is_active', true)
+    ->paginate(12);
+```
+
+---
+
+## 7. SECURITY BEST PRACTICES
+
+- **Validate all input**: Use Form Requests
+- **Sanitize output**: Use Blade's `{{ }}` (auto-escaping)
+- **CSRF protection**: Include `@csrf` in all forms
+- **Rate limiting**: Implement on API routes
+- **File uploads**: Validate type, size, scan for malware
+- **SQL Injection prevention**: Always use parameterized queries (Laravel does this by default)
+
+---
+
+## 8. CODE EXAMPLES
+
+### Product Repository
+```php
+<?php
+namespace App\Repositories;
+
+use App\Models\Product;
+use Illuminate\Pagination\Paginator;
+
+class ProductRepository
+{
+    public function getFeaturedProducts(int $limit = 12): array
+    {
+        return Product::with(['category', 'images'])
+            ->where('is_active', true)
+            ->where('is_featured', true)
+            ->limit($limit)
+            ->get()
+            ->toArray();
+    }
+    
+    public function getProductsByCategory(string $categorySlug, int $page = 1): Paginator
+    {
+        return Product::with(['category', 'images'])
+            ->whereHas('category', fn($q) => $q->where('slug', $categorySlug))
+            ->where('is_active', true)
+            ->paginate(12);
+    }
+    
+    public function searchProducts(string $query, int $page = 1): Paginator
+    {
+        return Product::with(['category', 'images'])
+            ->where('is_active', true)
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('description', 'like', "%{$query}%")
+                  ->orWhere('meta_keywords', 'like', "%{$query}%");
+            })
+            ->paginate(12);
+    }
+}
+```
+
+### Product Service
+```php
+<?php
+namespace App\Services;
+
+use App\Repositories\ProductRepository;
+
+class ProductService
+{
+    private ProductRepository $repository;
+    
+    public function __construct(ProductRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+    
+    public function getProductsForDisplay(string $category = null): array
+    {
+        if ($category) {
+            return $this->repository->getProductsByCategory($category)->toArray();
+        }
+        
+        return $this->repository->getFeaturedProducts();
+    }
+}
+```
+
+---
+
+## 9. FILE AND FOLDER STRUCTURE
+
+```
+empire.pk/
+├── app/
+│   ├── Models/
+│   ├── Controllers/
+│   ├── Requests/
+│   ├── Repositories/
+│   ├── Services/
+│   ├── Traits/
+│   └── Helpers/
+├── routes/
+│   ├── web.php
+│   └── api.php (if needed)
+├── resources/
+│   ├── views/
+│   │   ├── layouts/
+│   │   │   ├── app.blade.php
+│   │   │   └── admin.blade.php
+│   │   ├── products/
+│   │   ├── categories/
+│   │   ├── admin/
+│   │   └── components/
+│   └── css/
+│       └── app.css
+├── database/
+│   ├── migrations/
+│   ├── seeders/
+│   └── factories/
+├── public/
+│   └── images/
+├── storage/
+│   └── app/
+│       ├── products/ (product images)
+│       └── uploads/
+├── .env
+├── .cursorrules (THIS FILE)
+└── ...
+```
+
+---
+
+## 10. IMPORTANT REMINDERS
+
+✅ **DO**:
+- Use `with()` to eager load relationships
+- Validate all user input with Form Requests
+- Use pagination for large datasets
+- Index foreign keys and frequently queried columns
+- Implement SEO tags on every product/category page
+- Cache expensive queries
+- Mobile-first responsive design
+- Use Laravel conventions (naming, structure)
+
+❌ **DON'T**:
+- Create unnecessary database indexes
+- Use `all()` without pagination
+- Load relationships in loops
+- Hardcode SEO meta tags
+- Skip input validation
+- Forget to add alt text to images
+- Use outdated Laravel patterns
+
+---
+
+## 11. GETTING STARTED COMMANDS
+
+```bash
+# Create project
+composer create-project laravel/laravel empire.pk
+
+# Install required packages
+composer require spatie/laravel-sitemap
+composer require spatie/laravel-image
+
+# Run migrations
+php artisan migrate
+
+# Seed database
+php artisan db:seed
+
+# Start development server
+php artisan serve
+
+# Build sitemap
+php artisan sitemap:generate
+```
+
+---
+
+**Version**: 1.0
+**Framework**: Laravel 13
+**Last Updated**: June 2026
