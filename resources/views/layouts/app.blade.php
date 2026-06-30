@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="@yield('meta_description', 'Empire.pk - Premium mobile accessories in Pakistan. Phone cases, screen protectors, chargers, AirPods & more.')">
     <title>@yield('title', 'Empire.pk') — Mobile Accessories Store</title>
 
@@ -47,6 +48,27 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        .store-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: #fff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.85rem center;
+            background-size: 1rem 1rem;
+            padding-right: 2.75rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .store-select:hover {
+            border-color: #cbd5e1;
+        }
+        .store-select:focus {
+            outline: none;
+            border-color: transparent;
+            box-shadow: 0 0 0 2px #f59e0b;
+        }
     </style>
 
     @stack('head')
@@ -76,6 +98,7 @@
 
     <script src="{{ asset('js/store-data.js') }}"></script>
     <script>
+        window.EMPIRE_STORE.checkoutUrl = @json(route('store.checkout.store'));
         window.EMPIRE_STORE.categories = @json($storeCatalogCategories ?? []);
         window.EMPIRE_STORE.products = @json($storeCatalogProducts ?? []);
         window.EMPIRE_STORE.brands = @json($storeCatalogBrands ?? []);

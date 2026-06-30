@@ -45,6 +45,7 @@
     formDrawerOpen: {{ $shouldOpenForm ? 'true' : 'false' }},
     detailDrawerOpen: false,
     menuOpenId: null,
+    colorLabelCount: 0,
     editing: {{ $isEditing ? 'true' : 'false' }},
     editingId: {{ $isEditing ? (int) old('_product_id') : 'null' }},
     selectedProduct: @js($editProductFromOld),
@@ -100,6 +101,7 @@
         this.editing = false;
         this.editingId = null;
         this.selectedProduct = null;
+        this.colorLabelCount = 0;
         this.detailDrawerOpen = false;
         this.menuOpenId = null;
         this.openDrawer('formDrawerOpen');
@@ -150,6 +152,7 @@
             <option value="active" @selected($status === 'active')>Active</option>
             <option value="inactive" @selected($status === 'inactive')>Inactive</option>
             <option value="low" @selected($status === 'low')>Low Stock</option>
+            <option value="trashed" @selected($status === 'trashed')>Trash</option>
         </select>
         <div class="flex gap-2 shrink-0">
             <button type="submit" class="px-4 py-2.5 bg-navy-900 text-white text-sm font-semibold rounded-xl hover:bg-navy-800 transition">Filter</button>
@@ -235,9 +238,15 @@
                             <span class="{{ $product->stock_quantity <= 10 ? 'text-red-600 font-bold' : 'text-gray-600' }}">{{ $product->stock_quantity }}</span>
                         </td>
                         <td class="px-5 py-3">
+                            @if ($showingTrashed)
+                            <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                In Trash
+                            </span>
+                            @else
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $product->is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600' }}">
                                 {{ $product->is_active ? 'Active' : 'Inactive' }}
                             </span>
+                            @endif
                         </td>
                         <td class="px-5 py-3 text-right relative">
                             <button type="button" @click.stop="toggleMenu({{ $product->id }})" class="p-2 text-gray-500 hover:text-navy-900 hover:bg-gray-100 rounded-lg transition">
@@ -246,16 +255,51 @@
                             <div x-show="menuOpenId === {{ $product->id }}" x-cloak @click.stop
                                  class="absolute right-5 top-full mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-20 text-left">
                                 <button type="button" @click="openDetail(@js($productData))" class="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left">View Detail</button>
-                                <button type="button" @click="openEdit(@js($productData))" class="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left">Edit Product</button>
-                                <form method="POST" action="{{ route('admin.products.destroy', $product) }}{{ $filterQuery }}"
-                                      onsubmit="return confirm('Delete this product? This cannot be undone.');">
+                                @if ($showingTrashed)
+                                <form method="POST" action="{{ route('admin.products.restore', $product->id) }}{{ $filterQuery }}">
+                                    @csrf
+                                    @foreach ($filterParams as $key => $value)
+                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                    @endforeach
+                                    <button type="submit" class="w-full px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 text-left">Restore</button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.products.force-destroy', $product->id) }}{{ $filterQuery }}">
                                     @csrf
                                     @method('DELETE')
                                     @foreach ($filterParams as $key => $value)
                                     <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                                     @endforeach
-                                    <button type="submit" class="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left">Delete</button>
+                                    <button type="button"
+                                            @click="$store.adminConfirm.ask({
+                                                title: 'Delete permanently?',
+                                                message: 'This will permanently remove {{ addslashes($product->name) }} and all of its images. This cannot be undone.',
+                                                confirmLabel: 'Delete Permanently',
+                                                cancelLabel: 'Cancel',
+                                                tone: 'danger',
+                                                form: $el.closest('form')
+                                            })"
+                                            class="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left">Delete Permanently</button>
                                 </form>
+                                @else
+                                <button type="button" @click="openEdit(@js($productData))" class="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left">Edit Product</button>
+                                <form method="POST" action="{{ route('admin.products.destroy', $product) }}{{ $filterQuery }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    @foreach ($filterParams as $key => $value)
+                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                    @endforeach
+                                    <button type="button"
+                                            @click="$store.adminConfirm.ask({
+                                                title: 'Move product to trash?',
+                                                message: '{{ addslashes($product->name) }} will be hidden from the store. You can restore it later from the Trash filter.',
+                                                confirmLabel: 'Move to Trash',
+                                                cancelLabel: 'Cancel',
+                                                tone: 'danger',
+                                                form: $el.closest('form')
+                                            })"
+                                            class="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left">Move to Trash</button>
+                                </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -359,10 +403,23 @@
                     <p class="text-[11px] text-gray-400 mt-1">Main image for listings and product page. JPG, PNG, or WebP up to 5MB.</p>
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-600 block mb-1">Variant Images <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <label class="text-xs font-semibold text-gray-600 block mb-1">Color Images <span class="text-gray-400 font-normal">(optional)</span></label>
                     <input type="file" name="gallery_images[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple
+                           @change="
+                               const files = $event.target.files;
+                               colorLabelCount = files ? files.length : 0;
+                           "
                            class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:font-semibold file:text-navy-900 hover:file:bg-gray-200">
-                    <p class="text-[11px] text-gray-400 mt-1">Extra images for colors, sizes, or versions. Shown as thumbnails on the store product page.</p>
+                    <p class="text-[11px] text-gray-400 mt-1">Each image is a color option on the store. Add a color name for every image.</p>
+                    <div class="mt-3 space-y-2" x-show="colorLabelCount > 0">
+                        <template x-for="index in colorLabelCount" :key="'color-label-' + index">
+                            <div>
+                                <label class="text-[11px] font-semibold text-gray-500 block mb-1" x-text="'Color name for image ' + index"></label>
+                                <input type="text" :name="'gallery_labels[' + (index - 1) + ']'" placeholder="e.g. Matte Black, Clear, Navy Blue"
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 <div class="pt-2 border-t border-gray-100">
@@ -475,13 +532,13 @@
 
                 <template x-if="selectedProduct?.gallery?.length">
                     <div class="space-y-3">
-                        <p class="text-xs font-bold text-navy-900 uppercase tracking-wide">Variant Images</p>
+                        <p class="text-xs font-bold text-navy-900 uppercase tracking-wide">Color Images</p>
                         <template x-for="item in selectedProduct.gallery" :key="item.id">
                             <div class="flex gap-3 items-start p-3 border border-gray-200 rounded-xl bg-gray-50">
-                                <img :src="item.url" :alt="item.label || 'Variant'" class="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-200">
+                                <img :src="item.url" :alt="item.label || 'Color'" class="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-200">
                                 <div class="flex-1 min-w-0 space-y-2">
                                     <input type="text" :name="'gallery_labels[' + item.id + ']'" :value="item.label || ''"
-                                           placeholder="Label e.g. Red, 128GB, Clear"
+                                           placeholder="Color name e.g. Matte Black, Clear"
                                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-empire-500">
                                     <label class="flex items-center gap-2 text-xs text-red-600">
                                         <input type="checkbox" name="remove_gallery_ids[]" :value="item.id" class="rounded accent-red-500">
@@ -494,10 +551,10 @@
                 </template>
 
                 <div>
-                    <label class="text-xs font-semibold text-gray-600 block mb-1">Add Variant Images</label>
+                    <label class="text-xs font-semibold text-gray-600 block mb-1">Add Color Images</label>
                     <input type="file" name="gallery_images[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple
                            class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:font-semibold file:text-navy-900 hover:file:bg-gray-200">
-                    <p class="text-[11px] text-gray-400 mt-1">Upload more color, size, or version images. You can add labels after saving.</p>
+                    <p class="text-[11px] text-gray-400 mt-1">Upload one image per color. Set the color name above for existing images.</p>
                 </div>
 
                 <div class="pt-2 border-t border-gray-100">
@@ -550,12 +607,12 @@
                     </template>
                     <template x-if="selectedProduct.gallery?.length">
                         <div>
-                            <p class="text-xs font-semibold text-gray-500 mb-2">Variant images</p>
+                            <p class="text-xs font-semibold text-gray-500 mb-2">Color options</p>
                             <div class="flex flex-wrap gap-2">
                                 <template x-for="item in selectedProduct.gallery" :key="item.id">
                                     <div class="text-center">
-                                        <img :src="item.url" :alt="item.label || 'Variant'" class="w-14 h-14 rounded-lg object-cover border border-gray-200">
-                                        <p class="text-[10px] text-gray-500 mt-1 max-w-[56px] truncate" x-text="item.label || 'Variant'"></p>
+                                        <img :src="item.url" :alt="item.label || 'Color'" class="w-14 h-14 rounded-lg object-cover border border-gray-200">
+                                        <p class="text-[10px] text-gray-500 mt-1 max-w-[56px] truncate" x-text="item.label || 'Color'"></p>
                                     </div>
                                 </template>
                             </div>

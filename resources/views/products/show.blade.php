@@ -8,12 +8,34 @@
     product: @js($product),
     relatedProducts: @js($relatedProducts),
     quantity: 1,
-    selectedImage: 0,
-    get images() {
-        if (!this.product?.images?.length) {
-            return this.product?.image ? [this.product.image] : [];
+    selectedImageKey: 'main',
+    get thumbnails() {
+        const items = [{ key: 'main', url: this.product.image, label: 'Main' }];
+        (this.product.colors || []).forEach((color) => {
+            items.push({ key: String(color.id), url: color.url, label: color.label, id: color.id });
+        });
+        return items;
+    },
+    get displayImage() {
+        const thumb = this.thumbnails.find((item) => item.key === this.selectedImageKey);
+        return thumb?.url || this.product.image;
+    },
+    get selectedColor() {
+        if (this.selectedImageKey === 'main') return null;
+        return (this.product.colors || []).find((color) => String(color.id) === this.selectedImageKey) ?? null;
+    },
+    get selectedVariant() {
+        if (this.selectedColor) {
+            return this.selectedColor;
         }
-        return this.product.images;
+
+        return { id: null, url: this.product.image, label: 'Main' };
+    },
+    selectThumbnail(key) {
+        this.selectedImageKey = key;
+    },
+    addToCart(openDrawer = true) {
+        this.$store.cart.add(this.product, this.quantity, openDrawer, this.selectedVariant);
     }
 }">
     {{-- Breadcrumb --}}
@@ -23,7 +45,7 @@
                 <a href="{{ url('/') }}" class="hover:text-empire-600">Home</a>
                 <span>/</span>
                 @if ($product['category'])
-                <a href="{{ url('/categories/' . $product['category']) }}" class="hover:text-empire-600">{{ $product['categoryName'] }}</a>
+                <a href="{{ route('store.collections.show', $product['category']) }}" class="hover:text-empire-600">{{ $product['categoryName'] }}</a>
                 <span>/</span>
                 @endif
                 <span class="text-gray-600 line-clamp-1">{{ $product['name'] }}</span>
@@ -31,19 +53,21 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 py-6 md:py-10">
-        <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+    <div class="max-w-7xl mx-auto px-4 py-4 md:py-5 lg:py-6">
+        <div class="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-10 md:items-start">
             {{-- Images --}}
-            <div>
-                <div class="aspect-square rounded-2xl overflow-hidden bg-white border border-gray-200 mb-3">
-                    <img :src="images[selectedImage]" :alt="product.name" class="w-full h-full object-cover">
+            <div class="w-full md:w-4/5">
+                <div class="aspect-square w-full rounded-2xl overflow-hidden bg-white border border-gray-200 mb-3">
+                    <img :src="displayImage" :alt="product.name" class="w-full h-full object-cover">
                 </div>
-                <div class="flex gap-2 flex-wrap" x-show="images.length > 1">
-                    <template x-for="(img, idx) in images" :key="idx">
-                        <button @click="selectedImage = idx"
-                                :class="selectedImage === idx ? 'ring-2 ring-empire-500' : 'ring-1 ring-gray-200'"
-                                class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shrink-0">
-                            <img :src="img" :alt="product.gallery?.[idx - 1]?.label || product.name" class="w-full h-full object-cover">
+                <div class="flex gap-2 flex-wrap" x-show="thumbnails.length > 1">
+                    <template x-for="thumb in thumbnails" :key="thumb.key">
+                        <button type="button"
+                                @click="selectThumbnail(thumb.key)"
+                                :title="thumb.label"
+                                :class="selectedImageKey === thumb.key ? 'ring-2 ring-empire-500' : 'ring-1 ring-gray-200'"
+                                class="w-16 h-16 md:w-[4.5rem] md:h-[4.5rem] rounded-xl overflow-hidden shrink-0 transition">
+                            <img :src="thumb.url" :alt="thumb.label" class="w-full h-full object-cover">
                         </button>
                     </template>
                 </div>
@@ -51,50 +75,57 @@
 
             {{-- Details --}}
             <div>
-                <p class="text-sm text-gray-500 uppercase tracking-wide" x-text="product.brand || 'Empire.pk'"></p>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-navy-900 mt-1 leading-tight" x-text="product.name"></h1>
+                <p class="text-xs md:text-sm text-gray-500 uppercase tracking-wide" x-text="product.brand || 'Empire.pk'"></p>
+                <h1 class="text-xl md:text-2xl font-extrabold text-navy-900 mt-1 leading-snug" x-text="product.name"></h1>
 
-                <div class="mt-5 flex items-baseline gap-3">
-                    <span class="text-3xl md:text-4xl font-extrabold text-navy-900" x-text="EMPIRE_STORE.formatPrice(product.price)"></span>
+                <div class="mt-3 md:mt-2 flex items-baseline gap-3">
+                    <span class="text-2xl md:text-3xl font-extrabold text-navy-900" x-text="EMPIRE_STORE.formatPrice(product.price)"></span>
                 </div>
 
-                <p class="mt-2 text-sm font-medium flex items-center gap-1"
+                <p class="mt-2 text-xs md:text-sm font-medium flex items-center gap-1"
                    :class="product.inStock ? 'text-emerald-600' : 'text-red-600'">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     <span x-text="product.inStock ? 'In Stock — Ready to Ship' : 'Out of Stock'"></span>
                 </p>
 
-                <p class="mt-4 text-sm text-gray-600 leading-relaxed" x-text="product.description || 'Premium quality mobile accessory from Empire.pk. Genuine product with warranty. Free delivery on orders above Rs. 2,500 in major cities.'"></p>
+                <div class="mt-3 md:mt-2" x-show="product.hasColors">
+                    <p class="text-xs md:text-sm font-semibold text-navy-900">
+                        Color:
+                        <span class="font-normal text-gray-600" x-text="selectedVariant.label"></span>
+                    </p>
+                </div>
+
+                <p class="mt-3 md:mt-2 text-xs md:text-sm text-gray-600 leading-relaxed line-clamp-3 md:line-clamp-4" x-text="product.description || 'Premium quality mobile accessory from Empire.pk. Genuine product with warranty. Free delivery on orders above Rs. 2,500 in major cities.'"></p>
 
                 {{-- Quantity & Add to cart --}}
-                <div class="mt-6 flex flex-col sm:flex-row gap-3">
-                    <div class="flex items-center border border-gray-300 rounded-xl overflow-hidden w-fit">
-                        <button @click="quantity = Math.max(1, quantity - 1)" class="px-4 py-3 hover:bg-gray-100 transition text-lg font-medium">−</button>
-                        <span class="px-4 py-3 font-semibold min-w-[3rem] text-center" x-text="quantity"></span>
-                        <button @click="quantity++" class="px-4 py-3 hover:bg-gray-100 transition text-lg font-medium">+</button>
+                <div class="mt-4 md:mt-3 flex flex-col sm:flex-row gap-2.5">
+                    <div class="flex items-center border border-gray-300 rounded-xl overflow-hidden w-fit text-sm">
+                        <button @click="quantity = Math.max(1, quantity - 1)" class="px-3 py-2 md:py-2.5 hover:bg-gray-100 transition font-medium">−</button>
+                        <span class="px-3 py-2 md:py-2.5 font-semibold min-w-[2.5rem] text-center" x-text="quantity"></span>
+                        <button @click="quantity++" class="px-3 py-2 md:py-2.5 hover:bg-gray-100 transition font-medium">+</button>
                     </div>
-                    <button @click="$store.cart.add(product, quantity)" :disabled="!product.inStock"
-                            class="flex-1 py-3.5 bg-navy-900 hover:bg-navy-800 disabled:bg-gray-300 text-white font-bold rounded-xl transition flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    <button @click="addToCart()" :disabled="!product.inStock"
+                            class="flex-1 py-2.5 md:py-3 bg-navy-900 hover:bg-navy-800 disabled:bg-gray-300 text-white text-sm font-bold rounded-xl transition flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                         Add to Cart
                     </button>
                 </div>
 
-                <button @click="$store.cart.add(product, quantity, false); window.location.href = '{{ url('/checkout') }}'"
+                <button @click="addToCart(false); window.location.href = '{{ route('store.checkout') }}'"
                         :disabled="!product.inStock"
-                        class="mt-3 w-full py-3 border-2 border-navy-900 text-navy-900 font-bold rounded-xl hover:bg-navy-900 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition">
+                        class="mt-2.5 w-full py-2.5 md:py-3 text-sm border-2 border-navy-900 text-navy-900 font-bold rounded-xl hover:bg-navy-900 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition">
                     Buy Now
                 </button>
 
                 {{-- Trust info --}}
-                <div class="mt-8 grid grid-cols-2 gap-3">
+                <div class="mt-4 md:mt-5 grid grid-cols-2 gap-2 md:gap-2.5">
                     @foreach([
                         ['title' => 'Free Delivery', 'sub' => 'Orders above Rs. 2,500'],
                         ['title' => 'Cash on Delivery', 'sub' => 'Pay when you receive'],
                         ['title' => '7-Day Returns', 'sub' => 'Easy exchange policy'],
                         ['title' => '100% Genuine', 'sub' => 'Authentic products only'],
                     ] as $info)
-                    <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div class="p-2.5 md:p-3 bg-gray-50 rounded-xl border border-gray-100">
                         <p class="text-xs font-semibold text-navy-900">{{ $info['title'] }}</p>
                         <p class="text-[10px] text-gray-500">{{ $info['sub'] }}</p>
                     </div>

@@ -44,11 +44,13 @@ class ProductController extends Controller
             ->when($status === 'active', fn ($query) => $query->where('is_active', true))
             ->when($status === 'inactive', fn ($query) => $query->where('is_active', false))
             ->when($status === 'low', fn ($query) => $query->where('stock_quantity', '<=', 10))
+            ->when($status === 'trashed', fn ($query) => $query->onlyTrashed())
             ->orderByDesc('created_at')
             ->get();
 
         $categories = Category::query()->where('is_active', true)->orderBy('title')->get(['id', 'title']);
         $brands = Brand::query()->where('is_active', true)->orderBy('title')->get(['id', 'title']);
+        $showingTrashed = $status === 'trashed';
 
         return view('admin.products.index', compact(
             'products',
@@ -58,6 +60,7 @@ class ProductController extends Controller
             'categoryId',
             'brandId',
             'status',
+            'showingTrashed',
         ));
     }
 
@@ -123,7 +126,27 @@ class ProductController extends Controller
 
         return redirect()
             ->route('admin.products', request()->only(['search', 'category_id', 'brand_id', 'status']))
-            ->with('success', 'Product deleted successfully.');
+            ->with('success', 'Product moved to trash. You can restore it from the Trash filter.');
+    }
+
+    public function restore(int $productId): RedirectResponse
+    {
+        $product = Product::onlyTrashed()->findOrFail($productId);
+        $product->restore();
+
+        return redirect()
+            ->route('admin.products', request()->only(['search', 'category_id', 'brand_id', 'status']))
+            ->with('success', 'Product restored successfully.');
+    }
+
+    public function forceDestroy(int $productId): RedirectResponse
+    {
+        $product = Product::onlyTrashed()->findOrFail($productId);
+        $product->forceDelete();
+
+        return redirect()
+            ->route('admin.products', request()->only(['search', 'category_id', 'brand_id', 'status']))
+            ->with('success', 'Product permanently deleted.');
     }
 
     private function storeGalleryImages(Product $product, Request $request): void

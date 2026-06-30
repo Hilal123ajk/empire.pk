@@ -13,6 +13,13 @@
 
 @section('content')
 @php
+    $status = $status ?? '';
+    $filtersActive = ($search ?? '') !== '' || $status !== '';
+    $filterParams = array_filter([
+        'search' => ($search ?? '') !== '' ? $search : null,
+        'status' => $status !== '' ? $status : null,
+    ], fn ($value) => $value !== null && $value !== '');
+    $filterQuery = $filterParams ? '?'.http_build_query($filterParams) : '';
     $shouldOpenForm = $errors->any() && old('_form');
     $isEditing = old('_form') === 'edit';
     $editCategoryFromOld = $isEditing ? [
@@ -89,9 +96,13 @@
     <form method="GET" action="{{ route('admin.categories') }}" class="bg-white rounded-2xl border border-gray-200 p-4 mb-6 flex flex-col sm:flex-row gap-3">
         <input type="search" name="search" value="{{ $search ?? '' }}" placeholder="Search categories by title, slug, or description..."
                class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">
+        <select name="status" class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
+            <option value="">All Categories</option>
+            <option value="trashed" @selected($status === 'trashed')>Trash</option>
+        </select>
         <div class="flex gap-2">
-            <button type="submit" class="px-4 py-2.5 bg-navy-900 text-white text-sm font-semibold rounded-xl hover:bg-navy-800 transition">Search</button>
-            @if(!empty($search))
+            <button type="submit" class="px-4 py-2.5 bg-navy-900 text-white text-sm font-semibold rounded-xl hover:bg-navy-800 transition">Filter</button>
+            @if ($filtersActive)
             <a href="{{ route('admin.categories') }}" class="px-4 py-2.5 border border-gray-200 text-sm font-medium rounded-xl hover:bg-gray-50 transition">Clear</a>
             @endif
         </div>
@@ -99,10 +110,12 @@
 
     @if ($categories->isEmpty())
     <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center">
-        <p class="text-gray-500 mb-4">{{ !empty($search) ? 'No categories match your search.' : 'No categories yet. Create your first category to organize products.' }}</p>
+        <p class="text-gray-500 mb-4">{{ $filtersActive ? 'No categories match your filters.' : 'No categories yet. Create your first category to organize products.' }}</p>
+        @if (! $showingTrashed)
         <button type="button" @click="openCreate()" class="px-5 py-2.5 bg-navy-900 text-white text-sm font-semibold rounded-xl hover:bg-navy-800 transition">
             Add Category
         </button>
+        @endif
     </div>
     @else
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -130,18 +143,45 @@
                         <h3 class="font-bold text-navy-900">{{ $category->title }}</h3>
                         <p class="text-xs text-gray-400 mt-0.5">{{ $category->slug }}</p>
                     </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 {{ $category->is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600' }}">
-                        {{ $category->is_active ? 'Active' : 'Inactive' }}
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 {{ $showingTrashed ? 'bg-red-100 text-red-800' : ($category->is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600') }}">
+                        {{ $showingTrashed ? 'In Trash' : ($category->is_active ? 'Active' : 'Inactive') }}
                     </span>
                 </div>
                 @if ($category->description)
                 <p class="text-sm text-gray-500 mt-2 line-clamp-2">{{ $category->description }}</p>
                 @endif
                 <div class="flex gap-2 mt-3" @click.stop>
-                    <a href="{{ url('/categories/'.$category->slug) }}" target="_blank"
+                    @if ($showingTrashed)
+                    <form method="POST" action="{{ route('admin.categories.restore', $category->id) }}{{ $filterQuery }}" class="flex-1">
+                        @csrf
+                        @foreach ($filterParams as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endforeach
+                        <button type="submit" class="w-full py-2 text-xs font-semibold text-center bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">Restore</button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.categories.force-destroy', $category->id) }}{{ $filterQuery }}" class="flex-1">
+                        @csrf
+                        @method('DELETE')
+                        @foreach ($filterParams as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endforeach
+                        <button type="button"
+                                @click="$store.adminConfirm.ask({
+                                    title: 'Delete category permanently?',
+                                    message: 'This will permanently remove {{ addslashes($category->title) }} and its image. This cannot be undone.',
+                                    confirmLabel: 'Delete Permanently',
+                                    cancelLabel: 'Cancel',
+                                    tone: 'danger',
+                                    form: $el.closest('form')
+                                })"
+                                class="w-full py-2 text-xs font-semibold text-center border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition">Delete</button>
+                    </form>
+                    @else
+                    <a href="{{ route('store.collections.show', $category->slug) }}" target="_blank"
                        class="flex-1 py-2 text-xs font-semibold text-center border border-gray-200 rounded-lg hover:bg-gray-50 transition">View Store</a>
                     <button type="button" @click="openEdit(@js($categoryData))"
                             class="flex-1 py-2 text-xs font-semibold text-center bg-navy-900 text-white rounded-lg hover:bg-navy-800 transition">Edit</button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -308,19 +348,57 @@
                             </div>
                         </template>
                     </dl>
-                    <a :href="'/categories/' + selectedCategory.slug" target="_blank"
+                    <a :href="'/collections/' + selectedCategory.slug" target="_blank"
                        class="block text-center py-2.5 text-sm font-semibold text-empire-600 border border-empire-200 rounded-xl hover:bg-empire-50">View on Store →</a>
                 </div>
             </template>
             <div class="border-t border-gray-200 p-5 shrink-0 bg-gray-50 space-y-3">
-                <button type="button" @click="openEdit(selectedCategory); closeDrawer('detailDrawerOpen')"
-                        class="w-full py-2.5 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800">Edit Category</button>
-                <form method="POST" :action="'/admin/categories/' + (selectedCategory?.id ?? '')"
-                      onsubmit="return confirm('Delete this category? This cannot be undone.');">
+                @if ($showingTrashed)
+                <form method="POST" :action="`/admin/categories/${selectedCategory?.id}/restore`">
+                    @csrf
+                    @foreach ($filterParams as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700">Restore Category</button>
+                </form>
+                <form method="POST" :action="`/admin/categories/${selectedCategory?.id}/force`">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="w-full py-2.5 border border-red-200 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50">Delete Category</button>
+                    @foreach ($filterParams as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    <button type="button"
+                            @click="$store.adminConfirm.ask({
+                                title: 'Delete category permanently?',
+                                message: 'This will permanently remove this category and its image. This cannot be undone.',
+                                confirmLabel: 'Delete Permanently',
+                                cancelLabel: 'Cancel',
+                                tone: 'danger',
+                                form: $el.closest('form')
+                            })"
+                            class="w-full py-2.5 border border-red-200 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50">Delete Permanently</button>
                 </form>
+                @else
+                <button type="button" @click="openEdit(selectedCategory); closeDrawer('detailDrawerOpen')"
+                        class="w-full py-2.5 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800">Edit Category</button>
+                <form method="POST" :action="`/admin/categories/${selectedCategory?.id}`">
+                    @csrf
+                    @method('DELETE')
+                    @foreach ($filterParams as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    <button type="button"
+                            @click="$store.adminConfirm.ask({
+                                title: 'Move category to trash?',
+                                message: 'This category will be hidden from the store. You can restore it later from the Trash filter. Categories with assigned products cannot be deleted.',
+                                confirmLabel: 'Move to Trash',
+                                cancelLabel: 'Cancel',
+                                tone: 'danger',
+                                form: $el.closest('form')
+                            })"
+                            class="w-full py-2.5 border border-red-200 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50">Move to Trash</button>
+                </form>
+                @endif
             </div>
         </div>
     </div>

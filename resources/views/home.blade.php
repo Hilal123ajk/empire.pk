@@ -75,7 +75,7 @@
             <h2 class="text-2xl md:text-3xl font-extrabold text-navy-900">Shop by Category</h2>
             <p class="text-gray-500 text-sm mt-1">Find the perfect accessory for your device</p>
         </div>
-        <a href="{{ url('/phone-accessories') }}" class="hidden sm:flex items-center gap-1 text-sm font-semibold text-empire-600 hover:text-empire-700 transition">
+        <a href="{{ route('store.collections.index') }}" class="hidden sm:flex items-center gap-1 text-sm font-semibold text-empire-600 hover:text-empire-700 transition">
             View All
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </a>
@@ -83,7 +83,7 @@
 
     <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 md:gap-4" x-data="{}">
         <template x-for="cat in EMPIRE_STORE.categories.slice(0, 12)" :key="cat.slug">
-            <a :href="'/categories/' + cat.slug" class="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-empire-300 transition-all duration-300">
+            <a :href="'/collections/' + cat.slug" class="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-empire-300 transition-all duration-300">
                 <div class="aspect-square overflow-hidden bg-gray-100">
                     <img :src="cat.image" :alt="cat.name" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 </div>
@@ -104,13 +104,13 @@
                 <h2 class="text-2xl md:text-3xl font-extrabold text-navy-900">Featured Products</h2>
                 <p class="text-gray-500 text-sm mt-1">Hand-picked bestsellers for you</p>
             </div>
-            <a href="{{ url('/products') }}" class="text-sm font-semibold text-empire-600 hover:text-empire-700 transition">See All →</a>
+            <a href="{{ route('store.products.index') }}" class="text-sm font-semibold text-empire-600 hover:text-empire-700 transition">See All →</a>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
             @forelse ($featuredProducts as $product)
             <div class="bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col">
-                <a href="{{ url('/products/' . $product['slug']) }}" class="relative block aspect-square overflow-hidden bg-white">
+                <a href="{{ route('store.products.show', $product['slug']) }}" class="relative block aspect-square overflow-hidden bg-white">
                     <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     @unless ($product['inStock'])
                     <span class="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -122,7 +122,7 @@
                     @if ($product['brand'])
                     <p class="text-[10px] md:text-xs text-gray-500 uppercase tracking-wide">{{ $product['brand'] }}</p>
                     @endif
-                    <a href="{{ url('/products/' . $product['slug']) }}" class="text-xs md:text-sm font-semibold text-navy-900 line-clamp-2 mt-0.5 hover:text-empire-600 transition">{{ $product['name'] }}</a>
+                    <a href="{{ route('store.products.show', $product['slug']) }}" class="text-xs md:text-sm font-semibold text-navy-900 line-clamp-2 mt-0.5 hover:text-empire-600 transition">{{ $product['name'] }}</a>
                     <div class="mt-auto pt-3 flex items-end justify-between gap-2">
                         <div>
                             <p class="text-base md:text-lg font-bold text-navy-900">Rs. {{ number_format($product['price'], 0) }}</p>
@@ -172,7 +172,7 @@
             <div>
                 <h2 class="text-2xl md:text-4xl font-extrabold text-white mb-2">Protect Your Phone in Style</h2>
                 <p class="text-gray-300 text-sm md:text-base mb-6 max-w-md mx-auto">Premium cases from Spigen, UAG, and more — starting at Rs. 899</p>
-                <a href="{{ url('/categories/phone-cases') }}" class="inline-flex px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-bold rounded-xl transition">Shop Cases</a>
+                <a href="{{ route('store.collections.show', 'phone-cases') }}" class="inline-flex px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-bold rounded-xl transition">Shop Cases</a>
             </div>
         </div>
     </div>
@@ -182,7 +182,7 @@
 <section class="max-w-7xl mx-auto px-4 pb-14">
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl md:text-3xl font-extrabold text-navy-900">New Arrivals</h2>
-        <a href="{{ url('/products?sort=featured') }}" class="text-sm font-semibold text-empire-600 hover:text-empire-700 transition">View All →</a>
+        <a href="{{ route('store.products.index', ['sort' => 'featured']) }}" class="text-sm font-semibold text-empire-600 hover:text-empire-700 transition">View All →</a>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
         <template x-for="product in EMPIRE_STORE.newArrivals" :key="'new-'+product.id">

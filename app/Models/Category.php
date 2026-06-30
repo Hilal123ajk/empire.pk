@@ -7,12 +7,14 @@ namespace App\Models;
 use App\Traits\HasPublicStorageImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Category extends Model
 {
     use HasPublicStorageImage;
+    use SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -45,7 +47,9 @@ class Category extends Model
         });
 
         static::deleting(function (Category $category): void {
-            static::deleteStoredImage($category);
+            if ($category->isForceDeleting()) {
+                static::deleteStoredImage($category);
+            }
         });
     }
 
@@ -55,7 +59,7 @@ class Category extends Model
         $original = $slug;
         $counter = 1;
 
-        while (static::query()
+        while (static::withTrashed()
             ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
             ->where('slug', $slug)
             ->exists()) {

@@ -5,7 +5,7 @@
 @section('page_subtitle', 'Track and manage customer orders')
 
 @section('content')
-<div x-data="adminOrders()" @click.outside="menuOpenId = null">
+<div x-data="adminOrders()" @click.outside="closeMenu()" @keydown.escape.window="closeMenu()">
     <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6 flex flex-col sm:flex-row gap-3">
         <input type="search" x-model="search" placeholder="Search order ID or customer..."
                class="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">
@@ -19,7 +19,11 @@
         </select>
     </div>
 
-    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <div x-show="orders.length === 0" class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">
+        No orders yet. Customer checkouts will appear here.
+    </div>
+
+    <div x-show="orders.length > 0" class="bg-white rounded-2xl border border-gray-200">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
@@ -53,27 +57,30 @@
                                       x-text="order.status"></span>
                             </td>
                             <td class="px-5 py-3 hidden lg:table-cell text-xs text-gray-500" x-text="order.createdAt"></td>
-                            <td class="px-5 py-3 text-right relative">
-                                <button type="button" @click.stop="toggleMenu(order.id)" class="p-2 text-gray-500 hover:text-navy-900 hover:bg-gray-100 rounded-lg transition">
+                            <td class="px-5 py-3 text-right">
+                                <button type="button" @click.stop="toggleMenu(order.id, $event)" class="p-2 text-gray-500 hover:text-navy-900 hover:bg-gray-100 rounded-lg transition">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/></svg>
                                 </button>
-                                <div x-show="menuOpenId === order.id" x-cloak @click.stop
-                                     class="absolute right-5 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-20 text-left">
-                                    <button type="button" @click="openDetail(order)" class="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                        View Detail
-                                    </button>
-                                    <button type="button" @click="openStatus(order)" class="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                        Update Status
-                                    </button>
-                                </div>
                             </td>
                         </tr>
                     </template>
                 </tbody>
             </table>
         </div>
+    </div>
+
+    {{-- Shared row actions menu --}}
+    <div x-show="menuOpenId && menuOrder" x-cloak
+         class="fixed w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-[100] text-left"
+         :style="`top: ${menuTop}px; right: ${menuRight}px`">
+        <button type="button" @click="openDetail(menuOrder)" class="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            View Detail
+        </button>
+        <button type="button" @click="openStatus(menuOrder)" class="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Update Status
+        </button>
     </div>
 
     {{-- Order detail drawer --}}
@@ -115,31 +122,38 @@
                         <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Delivery Address</h3>
                         <dl class="space-y-2 text-sm">
                             <div class="flex justify-between"><dt class="text-gray-500">City</dt><dd class="font-medium" x-text="selectedOrder.city"></dd></div>
-                            <div x-show="EMPIRE_ADMIN.orderDetails[selectedOrder.id]">
+                            <div x-show="selectedOrder.address">
                                 <dt class="text-gray-500 mb-1">Address</dt>
-                                <dd class="font-medium text-navy-900" x-text="EMPIRE_ADMIN.orderDetails[selectedOrder.id]?.address"></dd>
+                                <dd class="font-medium text-navy-900" x-text="selectedOrder.address"></dd>
                             </div>
                         </dl>
                     </div>
 
                     <div>
                         <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Order Items</h3>
-                        <template x-if="EMPIRE_ADMIN.orderDetails[selectedOrder.id]">
-                            <div class="space-y-3">
-                                <template x-for="(item, i) in EMPIRE_ADMIN.orderDetails[selectedOrder.id].items" :key="i">
-                                    <div class="flex justify-between py-2 border-b border-gray-100 last:border-0">
-                                        <div>
-                                            <p class="font-medium text-navy-900 text-sm" x-text="item.name"></p>
-                                            <p class="text-xs text-gray-500">Qty: <span x-text="item.qty"></span></p>
+                        <div class="space-y-3" x-show="selectedOrder.lineItems?.length">
+                            <template x-for="(item, i) in selectedOrder.lineItems" :key="i">
+                                <div class="flex gap-3 py-3 border-b border-gray-100 last:border-0">
+                                    <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
+                                        <img x-show="item.image" :src="item.image" :alt="item.name" class="w-full h-full object-cover">
+                                        <div x-show="!item.image" class="w-full h-full flex items-center justify-center text-gray-400">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                         </div>
-                                        <p class="font-semibold text-sm" x-text="EMPIRE_ADMIN.formatPrice(item.price * item.qty)"></p>
                                     </div>
-                                </template>
-                            </div>
-                        </template>
-                        <template x-if="!EMPIRE_ADMIN.orderDetails[selectedOrder.id]">
-                            <p class="text-sm text-gray-500"><span x-text="selectedOrder.items"></span> item(s)</p>
-                        </template>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium text-navy-900 text-sm" x-text="item.name"></p>
+                                        <p x-show="item.color" class="text-xs text-gray-500 mt-0.5">
+                                            Color: <span class="font-medium text-gray-700" x-text="item.color"></span>
+                                        </p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Qty: <span x-text="item.qty"></span></p>
+                                    </div>
+                                    <p class="font-semibold text-sm shrink-0" x-text="EMPIRE_ADMIN.formatPrice(item.price * item.qty)"></p>
+                                </div>
+                            </template>
+                        </div>
+                        <p x-show="!selectedOrder.lineItems?.length" class="text-sm text-gray-500">
+                            <span x-text="selectedOrder.items"></span> item(s)
+                        </p>
                     </div>
 
                     <div class="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
@@ -188,7 +202,7 @@
                     <label class="text-xs font-semibold text-gray-600 block mb-2">Message <span class="text-gray-400 font-normal">(optional)</span></label>
                     <textarea x-model="statusForm.message" rows="4" placeholder="Add a note for the customer or internal team..."
                               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500 resize-none"></textarea>
-                    <p class="text-[10px] text-gray-400 mt-1">Demo only — not sent to customer yet.</p>
+                    <p class="text-[10px] text-gray-400 mt-1">Saved with the order for fulfillment reference.</p>
                 </div>
             </form>
             <div class="border-t border-gray-200 p-5 shrink-0 flex gap-3 bg-gray-50">
@@ -199,3 +213,9 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    window.EMPIRE_ADMIN.orders = @json($adminOrders);
+</script>
+@endpush

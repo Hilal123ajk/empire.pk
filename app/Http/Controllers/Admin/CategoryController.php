@@ -17,6 +17,7 @@ class CategoryController extends Controller
     public function index(): View
     {
         $search = request()->string('search')->trim()->toString();
+        $status = request()->string('status')->toString();
 
         $categories = Category::query()
             ->when($search !== '', function ($query) use ($search): void {
@@ -26,10 +27,13 @@ class CategoryController extends Controller
                         ->orWhere('description', 'like', "%{$search}%");
                 });
             })
+            ->when($status === 'trashed', fn ($query) => $query->onlyTrashed())
             ->orderBy('title')
             ->get();
 
-        return view('admin.categories.index', compact('categories', 'search'));
+        $showingTrashed = $status === 'trashed';
+
+        return view('admin.categories.index', compact('categories', 'search', 'status', 'showingTrashed'));
     }
 
     public function store(StoreCategoryRequest $request): RedirectResponse
@@ -80,14 +84,41 @@ class CategoryController extends Controller
     {
         if ($category->products()->exists()) {
             return redirect()
-                ->route('admin.categories')
+                ->route('admin.categories', request()->only(['search', 'status']))
                 ->withErrors(['category' => 'Cannot delete a category that has products assigned.']);
         }
 
         $category->delete();
 
         return redirect()
-            ->route('admin.categories')
-            ->with('success', 'Category deleted successfully.');
+            ->route('admin.categories', request()->only(['search', 'status']))
+            ->with('success', 'Category moved to trash. You can restore it from the Trash filter.');
+    }
+
+    public function restore(int $categoryId): RedirectResponse
+    {
+        $category = Category::onlyTrashed()->findOrFail($categoryId);
+        $category->restore();
+
+        return redirect()
+            ->route('admin.categories', request()->only(['search', 'status']))
+            ->with('success', 'Category restored successfully.');
+    }
+
+    public function forceDestroy(int $categoryId): RedirectResponse
+    {
+        $category = Category::onlyTrashed()->findOrFail($categoryId);
+
+        if ($category->products()->exists()) {
+            return redirect()
+                ->route('admin.categories', ['status' => 'trashed'])
+                ->withErrors(['category' => 'Cannot permanently delete a category that still has products assigned.']);
+        }
+
+        $category->forceDelete();
+
+        return redirect()
+            ->route('admin.categories', request()->only(['search', 'status']))
+            ->with('success', 'Category permanently deleted.');
     }
 }

@@ -17,30 +17,8 @@ window.EMPIRE_ADMIN = {
         lowStockCount: 3,
     },
 
-    orders: [
-        { id: 'EMP-1042', customer: 'Ahmed Khan', email: 'ahmed@email.com', phone: '0300-1112233', city: 'Lahore', total: 7498, status: 'pending', payment: 'cod', paymentStatus: 'pending', items: 2, createdAt: '2026-06-29 10:32' },
-        { id: 'EMP-1041', customer: 'Sara Malik', email: 'sara@email.com', phone: '0321-4455667', city: 'Islamabad', total: 3499, status: 'processing', payment: 'cod', paymentStatus: 'pending', items: 1, createdAt: '2026-06-29 09:15' },
-        { id: 'EMP-1040', customer: 'Usman Ali', email: 'usman@email.com', phone: '0333-9876543', city: 'Karachi', total: 12497, status: 'shipped', payment: 'cod', paymentStatus: 'pending', items: 3, createdAt: '2026-06-28 18:40' },
-        { id: 'EMP-1039', customer: 'Fatima Noor', email: 'fatima@email.com', phone: '0345-2233445', city: 'Lahore', total: 899, status: 'delivered', payment: 'cod', paymentStatus: 'paid', items: 1, createdAt: '2026-06-28 14:20' },
-        { id: 'EMP-1038', customer: 'Bilal Hussain', email: 'bilal@email.com', phone: '0312-5566778', city: 'Faisalabad', total: 5999, status: 'delivered', payment: 'cod', paymentStatus: 'paid', items: 1, createdAt: '2026-06-27 11:05' },
-        { id: 'EMP-1037', customer: 'Ayesha Raza', email: 'ayesha@email.com', phone: '0300-7788990', city: 'Rawalpindi', total: 4298, status: 'cancelled', payment: 'cod', paymentStatus: 'refunded', items: 2, createdAt: '2026-06-27 08:50' },
-        { id: 'EMP-1036', customer: 'Hamza Sheikh', email: 'hamza@email.com', phone: '0322-3344556', city: 'Multan', total: 1499, status: 'delivered', payment: 'cod', paymentStatus: 'paid', items: 1, createdAt: '2026-06-26 16:30' },
-        { id: 'EMP-1035', customer: 'Zainab Tariq', email: 'zainab@email.com', phone: '0331-6677889', city: 'Lahore', total: 8999, status: 'processing', payment: 'cod', paymentStatus: 'pending', items: 1, createdAt: '2026-06-26 12:00' },
-    ],
-
-    orderDetails: {
-        'EMP-1042': {
-            address: 'House 42, Block C, Johar Town',
-            items: [
-                { name: 'Spigen Ultra Hybrid Case iPhone 15', qty: 1, price: 3499 },
-                { name: '9H Tempered Glass Screen Protector iPhone 15 Pro', qty: 1, price: 899 },
-            ],
-        },
-        'EMP-1041': {
-            address: 'Flat 5, G-11 Markaz',
-            items: [{ name: 'Spigen Ultra Hybrid Case iPhone 15', qty: 1, price: 3499 }],
-        },
-    },
+    orders: [],
+    orderDetails: {},
 
     customers: [
         { id: 1, name: 'Ahmed Khan', email: 'ahmed@email.com', phone: '0300-1112233', city: 'Lahore', orders: 5, spent: 24500, joined: '2026-01-15' },

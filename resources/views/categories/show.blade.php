@@ -11,7 +11,7 @@
             <nav class="text-xs text-gray-400 mb-3 flex items-center gap-2 flex-wrap">
                 <a href="{{ url('/') }}" class="hover:text-empire-400">Home</a>
                 <span>/</span>
-                <a href="{{ url('/phone-accessories') }}" class="hover:text-empire-400">Phone Accessories</a>
+                <a href="{{ route('store.collections.index') }}" class="hover:text-empire-400">Collections</a>
                 <span>/</span>
                 <span class="text-gray-300">{{ $category->title }}</span>
             </nav>
@@ -37,9 +37,9 @@
     {{-- Subcategory pills --}}
     <div class="bg-white border-b border-gray-200 overflow-x-auto scrollbar-hide">
         <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2">
-            <a href="{{ url('/phone-accessories') }}" class="px-4 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 whitespace-nowrap transition">All Categories</a>
+            <a href="{{ route('store.collections.index') }}" class="px-4 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 whitespace-nowrap transition">All Categories</a>
             <template x-for="cat in EMPIRE_STORE.categories" :key="cat.slug">
-                <a :href="'/categories/' + cat.slug"
+                <a :href="'/collections/' + cat.slug"
                    :class="category === cat.slug ? 'bg-navy-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
                    class="px-4 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition"
                    x-text="cat.name"></a>
@@ -50,7 +50,7 @@
     <div class="max-w-7xl mx-auto px-4 py-6 md:py-8">
         <div x-show="filteredProducts.length === 0" class="text-center py-16">
             <p class="text-gray-500">No products in this category yet.</p>
-            <a href="{{ url('/products') }}" class="mt-4 inline-block text-empire-600 font-semibold text-sm hover:underline">Browse all products</a>
+            <a href="{{ route('store.products.index') }}" class="mt-4 inline-block text-empire-600 font-semibold text-sm hover:underline">Browse all products</a>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">

@@ -42,9 +42,9 @@
             <div>
                 <h4 class="text-white font-semibold mb-4">Quick Links</h4>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="{{ url('/phone-accessories') }}" class="hover:text-empire-400 transition">Phone Accessories</a></li>
-                    <li><a href="{{ url('/products') }}" class="hover:text-empire-400 transition">All Products</a></li>
-                    <li><a href="{{ url('/products?sort=discount') }}" class="hover:text-empire-400 transition">Deals & Offers</a></li>
+                    <li><a href="{{ route('store.collections.index') }}" class="hover:text-empire-400 transition">Shop Collections</a></li>
+                    <li><a href="{{ route('store.products.index') }}" class="hover:text-empire-400 transition">All Products</a></li>
+                    <li><a href="{{ route('store.products.index', ['sort' => 'discount']) }}" class="hover:text-empire-400 transition">Deals & Offers</a></li>
                     <li><a href="#" class="hover:text-empire-400 transition">About Us</a></li>
                     <li><a href="#" class="hover:text-empire-400 transition">Contact Us</a></li>
                 </ul>

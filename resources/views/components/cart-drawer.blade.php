@@ -45,14 +45,14 @@
             <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
             <p class="font-semibold text-gray-700 mb-1">Your cart is empty</p>
             <p class="text-sm text-gray-500 mb-6">Add items to get started</p>
-            <button @click="$store.cart.closeDrawer()" class="px-5 py-2.5 bg-navy-900 text-white text-sm font-semibold rounded-xl hover:bg-navy-800 transition">
+            <button @click="$store.cart.closeDrawer(); window.location.href = '{{ route('store.home') }}'" class="px-5 py-2.5 bg-navy-900 text-white text-sm font-semibold rounded-xl hover:bg-navy-800 transition">
                 Continue Shopping
             </button>
         </div>
 
         {{-- Cart items --}}
         <div x-show="$store.cart.items.length > 0" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-            <template x-for="item in $store.cart.items" :key="item.id">
+            <template x-for="item in $store.cart.items" :key="item.lineKey">
                 <div class="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                     <a :href="'/products/' + item.slug" @click="$store.cart.closeDrawer()" class="w-16 h-16 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
                         <img :src="item.image" :alt="item.name" class="w-full h-full object-cover">
@@ -60,14 +60,17 @@
                     <div class="flex-1 min-w-0">
                         <p class="text-[10px] text-gray-500 uppercase" x-text="item.brand"></p>
                         <a :href="'/products/' + item.slug" @click="$store.cart.closeDrawer()" class="text-sm font-semibold text-navy-900 line-clamp-2 hover:text-empire-600" x-text="item.name"></a>
+                        <p x-show="item.variantLabel" class="text-xs text-gray-500 mt-0.5">
+                            Color: <span class="font-medium text-gray-700" x-text="item.variantLabel"></span>
+                        </p>
                         <p class="text-sm font-bold text-navy-900 mt-1" x-text="EMPIRE_STORE.formatPrice(item.price)"></p>
                         <div class="flex items-center justify-between mt-2">
                             <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden text-sm">
-                                <button @click="$store.cart.updateQuantity(item.id, item.quantity - 1)" class="px-2.5 py-1 hover:bg-gray-100">−</button>
+                                <button @click="$store.cart.updateQuantity(item.lineKey, item.quantity - 1)" class="px-2.5 py-1 hover:bg-gray-100">−</button>
                                 <span class="px-2.5 py-1 font-medium min-w-[1.75rem] text-center" x-text="item.quantity"></span>
-                                <button @click="$store.cart.updateQuantity(item.id, item.quantity + 1)" class="px-2.5 py-1 hover:bg-gray-100">+</button>
+                                <button @click="$store.cart.updateQuantity(item.lineKey, item.quantity + 1)" class="px-2.5 py-1 hover:bg-gray-100">+</button>
                             </div>
-                            <button @click="$store.cart.remove(item.id)" class="text-xs text-red-500 hover:text-red-700 font-medium">Remove</button>
+                            <button @click="$store.cart.remove(item.lineKey)" class="text-xs text-red-500 hover:text-red-700 font-medium">Remove</button>
                         </div>
                     </div>
                 </div>
@@ -100,9 +103,11 @@
                 Proceed to Checkout
             </a>
 
-            <button @click="$store.cart.closeDrawer()" class="w-full py-2.5 text-sm font-medium text-gray-600 hover:text-navy-900 transition">
+            <a href="{{ route('store.home') }}"
+               @click="$store.cart.closeDrawer()"
+               class="block w-full py-2.5 text-sm font-medium text-gray-600 hover:text-navy-900 transition text-center">
                 Continue Shopping
-            </button>
+            </a>
         </div>
     </div>
 </div>

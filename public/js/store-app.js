@@ -1,6 +1,9 @@
 document.addEventListener('alpine:init', () => {
     Alpine.store('cart', {
-        items: JSON.parse(localStorage.getItem('empire_cart') || '[]'),
+        items: JSON.parse(localStorage.getItem('empire_cart') || '[]').map((item) => ({
+            ...item,
+            lineKey: item.lineKey ?? `${item.id}-${item.variantImageId ?? 'default'}`,
+        })),
         drawerOpen: false,
 
         get count() {
@@ -34,21 +37,40 @@ document.addEventListener('alpine:init', () => {
             document.body.classList.remove('overflow-hidden');
         },
 
-        add(product, quantity = 1, openDrawer = true) {
-            const existing = this.items.find(i => i.id === product.id);
+        buildLineKey(productId, variantImageId = null) {
+            return `${productId}-${variantImageId ?? 'default'}`;
+        },
+
+        add(product, quantity = 1, openDrawer = true, variant = null) {
+            const resolvedVariant = variant ?? {
+                id: null,
+                url: product.image,
+                label: 'Main',
+            };
+
+            const variantImageId = resolvedVariant.id ?? null;
+            const variantLabel = resolvedVariant.label ?? null;
+            const image = resolvedVariant.url ?? product.image;
+            const lineKey = this.buildLineKey(product.id, variantImageId);
+            const existing = this.items.find((item) => item.lineKey === lineKey);
+
             if (existing) {
                 existing.quantity += quantity;
             } else {
                 this.items.push({
+                    lineKey,
                     id: product.id,
                     slug: product.slug,
                     name: product.name,
                     brand: product.brand,
                     price: product.price,
-                    image: product.image,
+                    image,
+                    variantImageId,
+                    variantLabel,
                     quantity,
                 });
             }
+
             this.save();
             this.showToast(`${product.name} added to cart`);
             if (openDrawer) {
@@ -56,16 +78,16 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        remove(id) {
-            this.items = this.items.filter(i => i.id !== id);
+        remove(lineKey) {
+            this.items = this.items.filter((item) => item.lineKey !== lineKey);
             this.save();
         },
 
-        updateQuantity(id, quantity) {
-            const item = this.items.find(i => i.id === id);
+        updateQuantity(lineKey, quantity) {
+            const item = this.items.find((entry) => entry.lineKey === lineKey);
             if (!item) return;
             if (quantity <= 0) {
-                this.remove(id);
+                this.remove(lineKey);
             } else {
                 item.quantity = quantity;
                 this.save();
@@ -183,11 +205,136 @@ document.addEventListener('alpine:init', () => {
         notes: '',
         payment: 'cod',
         placed: false,
+        orderNumber: '',
+        submitting: false,
+        confirmOpen: false,
+        error: '',
+        fieldErrors: {},
 
-        placeOrder() {
-            if (this.$store.cart.items.length === 0) return;
-            this.placed = true;
-            this.$store.cart.clear();
+        sanitizeInput(value) {
+            if (typeof value !== 'string') return '';
+            return value.trim().replace(/[<>]/g, '');
+        },
+
+        normalizePhone(value) {
+            let digits = String(value || '').replace(/\D+/g, '');
+
+            if (digits.startsWith('92') && digits.length === 12) {
+                digits = '0' + digits.slice(2);
+            }
+
+            if (digits.startsWith('3') && digits.length === 10) {
+                digits = '0' + digits;
+            }
+
+            return digits;
+        },
+
+        countWords(value) {
+            return value.trim().split(/\s+/).filter(Boolean).length;
+        },
+
+        validateForm() {
+            this.fieldErrors = {};
+            this.error = '';
+
+            this.firstName = this.sanitizeInput(this.firstName);
+            this.lastName = this.sanitizeInput(this.lastName);
+            this.address = this.sanitizeInput(this.address);
+            this.notes = this.sanitizeInput(this.notes);
+            this.phone = this.normalizePhone(this.phone);
+
+            if (this.firstName.length < 2) {
+                this.fieldErrors.firstName = 'First name is required (at least 2 characters).';
+            }
+
+            if (this.lastName.length < 2) {
+                this.fieldErrors.lastName = 'Last name is required (at least 2 characters).';
+            }
+
+            if (!/^03[0-9]{9}$/.test(this.phone)) {
+                this.fieldErrors.phone = 'Enter a valid Pakistani mobile number (e.g. 03001234567).';
+            }
+
+            if (this.countWords(this.address) < 4) {
+                this.fieldErrors.address = 'Address must be at least 4 words (village, tehsil, district, city).';
+            }
+
+            if (!this.city) {
+                this.error = 'Please select a delivery city.';
+            }
+
+            return Object.keys(this.fieldErrors).length === 0 && !this.error;
+        },
+
+        requestPlaceOrder() {
+            if (this.$store.cart.items.length === 0 || this.submitting) return;
+
+            if (!this.validateForm()) {
+                this.error = this.error || 'Please fix the highlighted fields before placing your order.';
+                return;
+            }
+
+            this.confirmOpen = true;
+        },
+
+        confirmPlaceOrder() {
+            this.confirmOpen = false;
+            this.placeOrder();
+        },
+
+        async placeOrder() {
+            if (this.$store.cart.items.length === 0 || this.submitting) return;
+
+            if (!this.validateForm()) {
+                return;
+            }
+
+            this.submitting = true;
+            this.error = '';
+
+            try {
+                const response = await fetch(window.EMPIRE_STORE.checkoutUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        first_name: this.firstName,
+                        last_name: this.lastName,
+                        phone: this.phone,
+                        address: this.address,
+                        city: this.city,
+                        notes: this.notes || null,
+                        payment: this.payment,
+                        items: this.$store.cart.items.map((item) => ({
+                            product_id: item.id,
+                            quantity: item.quantity,
+                            variant_image_id: item.variantImageId,
+                        })),
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const validationMessage = data.errors
+                        ? Object.values(data.errors).flat()[0]
+                        : null;
+                    this.error = data.message || validationMessage || 'Unable to place order. Please try again.';
+                    return;
+                }
+
+                this.orderNumber = data.order_number;
+                this.placed = true;
+                this.$store.cart.clear();
+            } catch (error) {
+                this.error = 'Network error. Please check your connection and try again.';
+            } finally {
+                this.submitting = false;
+            }
         },
     }));
 });

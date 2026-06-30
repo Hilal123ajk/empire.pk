@@ -154,11 +154,21 @@ class StoreCatalogService
             'images' => $images,
             'gallery' => $product->images
                 ->map(fn ($image) => [
+                    'id' => $image->id,
                     'url' => $image->image_public_url,
                     'label' => $image->label,
                 ])
                 ->values()
                 ->all(),
+            'colors' => $product->images
+                ->map(fn ($image) => [
+                    'id' => $image->id,
+                    'url' => $image->image_public_url,
+                    'label' => $image->label ?: 'Color',
+                ])
+                ->values()
+                ->all(),
+            'hasColors' => $product->images->isNotEmpty(),
             'description' => $product->description,
             'featured' => $product->is_featured,
             'inStock' => $product->stock_quantity > 0,

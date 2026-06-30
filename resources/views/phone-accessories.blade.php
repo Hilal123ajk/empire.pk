@@ -10,7 +10,7 @@
         <nav class="text-xs text-gray-400 mb-4 flex items-center gap-2">
             <a href="{{ url('/') }}" class="hover:text-empire-400 transition">Home</a>
             <span>/</span>
-            <span class="text-gray-300">Phone Accessories</span>
+            <span class="text-gray-300">Collections</span>
         </nav>
         <h1 class="text-3xl md:text-4xl font-extrabold mb-2">Phones & Accessories</h1>
         <p class="text-gray-400 text-sm md:text-base max-w-2xl">Browse our complete collection of mobile accessories — from protective cases and tempered glass to fast chargers and premium audio gear.</p>
@@ -23,7 +23,7 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 md:gap-5">
         <template x-for="cat in EMPIRE_STORE.categories" :key="cat.slug">
-            <a :href="'/categories/' + cat.slug"
+            <a :href="'/collections/' + cat.slug"
                class="group relative bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl hover:border-empire-300 transition-all duration-300">
                 <div class="relative aspect-[4/3] sm:aspect-square overflow-hidden">
                     <img :src="cat.image" :alt="cat.name" loading="lazy"
@@ -45,7 +45,7 @@
         <h2 class="text-xl font-extrabold text-navy-900 mb-6 text-center">Shop by Brand</h2>
         <div class="flex flex-wrap justify-center gap-3">
             <template x-for="brand in EMPIRE_STORE.brands" :key="brand">
-                <a :href="'/products?brand=' + encodeURIComponent(brand)"
+                <a :href="'/collections/all?brand=' + encodeURIComponent(brand)"
                    class="px-5 py-2.5 bg-gray-100 hover:bg-navy-900 hover:text-white text-sm font-semibold text-gray-700 rounded-full transition"
                    x-text="brand"></a>
             </template>
@@ -57,7 +57,7 @@
 <section class="max-w-7xl mx-auto px-4 py-10 md:py-14">
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-xl md:text-2xl font-extrabold text-navy-900">Trending Now</h2>
-        <a href="{{ url('/products') }}" class="text-sm font-semibold text-empire-600 hover:text-empire-700">View All Products →</a>
+        <a href="{{ route('store.products.index') }}" class="text-sm font-semibold text-empire-600 hover:text-empire-700">View All Products →</a>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">

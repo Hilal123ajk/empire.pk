@@ -8,11 +8,13 @@ use App\Traits\HasPublicStorageImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Product extends Model
 {
     use HasPublicStorageImage;
+    use SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -56,7 +58,10 @@ class Product extends Model
         });
 
         static::deleting(function (Product $product): void {
-            static::deleteStoredImage($product);
+            if ($product->isForceDeleting()) {
+                static::deleteStoredImage($product);
+                $product->images()->get()->each(fn (ProductImage $image) => $image->delete());
+            }
         });
     }
 
@@ -66,7 +71,7 @@ class Product extends Model
         $original = $slug;
         $counter = 1;
 
-        while (static::query()
+        while (static::withTrashed()
             ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
             ->where('slug', $slug)
             ->exists()) {

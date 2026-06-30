@@ -45,7 +45,7 @@ trait ValidatesProductUploads
                     if ($file instanceof UploadedFile && ! $file->isValid()) {
                         $validator->errors()->add(
                             "gallery_images.{$index}",
-                            $this->uploadErrorMessage($file, 'Variant image')
+                            $this->uploadErrorMessage($file, 'Color image')
                         );
                     }
                 }

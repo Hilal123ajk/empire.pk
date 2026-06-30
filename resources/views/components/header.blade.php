@@ -1,54 +1,3 @@
-{{-- Top announcement bar --}}
-<div class="bg-navy-900 text-white text-xs sm:text-sm">
-    <div class="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2">
-        <p class="flex items-center gap-2">
-            <span class="hidden sm:inline">Welcome to</span>
-            <span class="font-semibold text-empire-400">Empire.pk</span>
-            <span class="hidden md:inline text-gray-400">| Premium Mobile Accessories</span>
-        </p>
-        <div class="flex items-center gap-4 text-gray-300">
-            <span class="hidden sm:flex items-center gap-1">
-                <svg class="w-4 h-4 text-empire-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
-                Free delivery on orders above Rs. 2,500
-            </span>
-            <a href="tel:0421113647" class="hover:text-empire-400 transition">042-111-EMPIRE</a>
-        </div>
-    </div>
-</div>
-
-{{-- Delivery bar --}}
-<div class="bg-white border-b border-gray-200 text-sm" x-data="{ city: localStorage.getItem('empire_city') || 'Lahore', showModal: false }">
-    <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-        <button @click="showModal = true" class="flex items-center gap-2 text-gray-700 hover:text-navy-900 transition group">
-            <svg class="w-5 h-5 text-empire-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <span>Deliver to: <strong x-text="city" class="text-navy-900"></strong></span>
-            <svg class="w-4 h-4 text-gray-400 group-hover:text-navy-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div class="flex items-center gap-4 text-xs sm:text-sm text-gray-600">
-            <span class="flex items-center gap-1">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                Cash on Delivery Available
-            </span>
-            <span class="hidden sm:inline">|</span>
-            <span class="hidden sm:inline">7-Day Easy Returns</span>
-        </div>
-    </div>
-
-    {{-- City modal --}}
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50" @keydown.escape.window="showModal = false">
-        <div @click.outside="showModal = false" class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <h3 class="text-lg font-bold text-navy-900 mb-4">Select Delivery City</h3>
-            <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                @foreach(['Lahore', 'Islamabad', 'Rawalpindi', 'Karachi', 'Faisalabad', 'Multan', 'Sialkot', 'Gujranwala'] as $c)
-                <button @click="city = '{{ $c }}'; localStorage.setItem('empire_city', '{{ $c }}'); showModal = false"
-                        :class="city === '{{ $c }}' ? 'bg-navy-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                        class="px-3 py-2.5 rounded-lg text-sm font-medium transition">{{ $c }}</button>
-                @endforeach
-            </div>
-        </div>
-    </div>
-</div>
-
 {{-- Main header --}}
 <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm" x-data="{ mobileMenu: false, mobileSearch: false }">
     <div class="max-w-7xl mx-auto px-4">
@@ -71,7 +20,7 @@
             </div>
 
             {{-- Search (desktop) --}}
-            <form action="{{ url('/products') }}" method="GET" class="hidden md:flex flex-1 max-w-xl mx-4">
+            <form action="{{ route('store.products.index') }}" method="GET" class="hidden md:flex flex-1 max-w-xl mx-4">
                 <div class="relative w-full">
                     <input type="search" name="q" placeholder="Search cases, chargers, screen protectors..."
                            class="w-full pl-4 pr-12 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500 focus:border-transparent transition">
@@ -102,7 +51,7 @@
 
         {{-- Mobile search --}}
         <div x-show="mobileSearch" x-cloak class="md:hidden pb-3">
-            <form action="{{ url('/products') }}" method="GET">
+            <form action="{{ route('store.products.index') }}" method="GET">
                 <input type="search" name="q" placeholder="Search products..."
                        class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">
             </form>
@@ -114,7 +63,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <ul class="flex items-center gap-1 py-0 overflow-x-auto scrollbar-hide">
                 <li>
-                    <a href="{{ url('/phone-accessories') }}"
+                    <a href="{{ route('store.collections.index') }}"
                        class="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-navy-900 hover:bg-white hover:text-empire-600 transition border-b-2 border-transparent hover:border-empire-500 whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg>
                         All Accessories
@@ -122,14 +71,14 @@
                 </li>
                 @foreach(array_slice($storeCatalogCategories ?? [], 0, 8) as $nav)
                 <li>
-                    <a href="{{ url('/categories/' . $nav['slug']) }}"
+                    <a href="{{ route('store.collections.show', $nav['slug']) }}"
                        class="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-navy-900 hover:bg-white transition whitespace-nowrap">
                         {{ $nav['name'] }}
                     </a>
                 </li>
                 @endforeach
                 <li>
-                    <a href="{{ url('/products?sort=discount') }}"
+                    <a href="{{ route('store.products.index', ['sort' => 'discount']) }}"
                        class="block px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition whitespace-nowrap">
                         🔥 Deals
                     </a>
@@ -150,12 +99,12 @@
             </div>
             <div class="p-4 space-y-1">
                 <a href="{{ url('/') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">Home</a>
-                <a href="{{ url('/phone-accessories') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">Phone Accessories</a>
-                <a href="{{ url('/products') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">All Products</a>
+                <a href="{{ route('store.collections.index') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">Shop Collections</a>
+                <a href="{{ route('store.products.index') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">All Products</a>
                 <hr class="my-3 border-gray-200">
                 <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Categories</p>
                 @foreach($storeCatalogCategories ?? [] as $nav)
-                <a href="{{ url('/categories/' . $nav['slug']) }}" class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">{{ $nav['name'] }}</a>
+                <a href="{{ route('store.collections.show', $nav['slug']) }}" class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">{{ $nav['name'] }}</a>
                 @endforeach
             </div>
         </div>

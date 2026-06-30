@@ -20,9 +20,9 @@ window.EMPIRE_STORE = {
     ],
 
     banners: [
-        { title: 'Summer Accessory Sale', subtitle: 'Up to 40% off on cases, chargers & more', cta: 'Shop Deals', link: '/products?sort=discount', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1400&h=500&fit=crop', color: 'from-slate-900/80 to-slate-900/40' },
-        { title: 'New iPhone 16 Accessories', subtitle: 'Cases, protectors & MagSafe gear in stock', cta: 'Explore iPhone', link: '/phone-accessories', image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=1400&h=500&fit=crop', color: 'from-indigo-900/80 to-indigo-900/30' },
-        { title: 'Free Delivery in Lahore', subtitle: 'On orders above Rs. 2,500', cta: 'Shop Now', link: '/phone-accessories', image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1400&h=500&fit=crop', color: 'from-amber-900/70 to-amber-900/30' },
+        { title: 'Summer Accessory Sale', subtitle: 'Up to 40% off on cases, chargers & more', cta: 'Shop Deals', link: '/collections/all?sort=discount', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1400&h=500&fit=crop', color: 'from-slate-900/80 to-slate-900/40' },
+        { title: 'New iPhone 16 Accessories', subtitle: 'Cases, protectors & MagSafe gear in stock', cta: 'Explore iPhone', link: '/collections', image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=1400&h=500&fit=crop', color: 'from-indigo-900/80 to-indigo-900/30' },
+        { title: 'Free Delivery in Lahore', subtitle: 'On orders above Rs. 2,500', cta: 'Shop Now', link: '/collections', image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1400&h=500&fit=crop', color: 'from-amber-900/70 to-amber-900/30' },
     ],
 };
 
