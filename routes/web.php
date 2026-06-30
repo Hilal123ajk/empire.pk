@@ -10,6 +10,8 @@ use App\Http\Controllers\Store\CategoryController as StoreCategoryController;
 use App\Http\Controllers\Store\CheckoutController;
 use App\Http\Controllers\Store\HomeController;
 use App\Http\Controllers\Store\ProductController as StoreProductController;
+use App\Http\Controllers\Store\SitemapController;
+use App\Support\SeoMeta;
 use Illuminate\Support\Facades\Route;
 
 Route::name('store.')->group(function () {
@@ -21,9 +23,21 @@ Route::name('store.')->group(function () {
     Route::get('/collections', [HomeController::class, 'phoneAccessories'])->name('collections.index');
     Route::get('/collections/{slug}', [StoreCategoryController::class, 'show'])->name('collections.show');
 
-    Route::get('/checkout', fn () => view('checkout'))->name('checkout');
+    Route::get('/checkout', fn () => view('checkout', [
+        'seo' => SeoMeta::forPage(
+            title: 'Checkout',
+            description: 'Complete your order at Empire.pk. Cash on delivery available across Pakistan.',
+            canonical: route('store.checkout'),
+            keywords: 'checkout, order, cash on delivery, Empire.pk',
+        ),
+    ]))->name('checkout');
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
     Route::redirect('/cart', '/checkout')->name('cart');
+
+    Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+    Route::get('/sitemap/generate', [SitemapController::class, 'generate'])
+        ->middleware('throttle:6,1')
+        ->name('sitemap.generate');
 });
 
 Route::redirect('/phone-accessories', '/collections', 301);

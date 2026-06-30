@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Services\StoreCatalogService;
+use App\Support\SeoMeta;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -18,11 +19,21 @@ class HomeController extends Controller
     {
         $featuredProducts = $this->catalog->getShuffledProductsPaginated(12);
 
-        return view('home', compact('featuredProducts'));
+        return view('home', [
+            'featuredProducts' => $featuredProducts,
+            'seo' => SeoMeta::defaults(route('store.home')),
+        ]);
     }
 
     public function phoneAccessories(): View
     {
-        return view('phone-accessories');
+        return view('phone-accessories', [
+            'seo' => SeoMeta::forPage(
+                title: 'Phone Accessories',
+                description: 'Shop phone accessories at Empire.pk. Cases, screen protectors, chargers, AirPods, iPad & MacBook accessories with free delivery in Pakistan.',
+                canonical: route('store.collections.index'),
+                keywords: 'phone accessories, mobile cases, screen protectors, Pakistan',
+            ),
+        ]);
     }
 }

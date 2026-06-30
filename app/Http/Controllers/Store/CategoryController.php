@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Support\SeoMeta;
 use Illuminate\View\View;
 
 class CategoryController extends Controller
@@ -17,6 +18,9 @@ class CategoryController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        return view('categories.show', compact('category'));
+        return view('categories.show', [
+            'category' => $category,
+            'seo' => SeoMeta::forCategory($category),
+        ]);
     }
 }

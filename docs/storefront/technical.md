@@ -115,4 +115,4 @@ Admin “View on Store” links should use these routes for consistency.
 
 - Adding new store pages: register route in `store.*` group, add controller method, create Blade view, update header/footer nav.
 - For API-style catalog: extract `StoreCatalogService` return shapes into DTOs or API resources.
-- SEO: meta tags per page are partially implemented; extend `@section` blocks in layout per `.cursorrules` guidance.
+- SEO: Open Graph, Twitter Card, canonical URLs, and JSON-LD on product pages via `App\Support\SeoMeta` and `resources/views/components/seo-meta.blade.php`. Sitemap served at `/sitemap.xml` (`SitemapService`, `spatie/laravel-sitemap`).

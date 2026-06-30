@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Store;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\StoreCatalogService;
+use App\Support\SeoMeta;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -17,7 +18,14 @@ class ProductController extends Controller
 
     public function index(): View
     {
-        return view('products.index');
+        return view('products.index', [
+            'seo' => SeoMeta::forPage(
+                title: 'All Products',
+                description: 'Browse all mobile accessories at Empire.pk. Phone cases, screen protectors, chargers, AirPods and more with cash on delivery in Pakistan.',
+                canonical: route('store.products.index'),
+                keywords: 'all products, mobile accessories, phone cases, Empire.pk',
+            ),
+        ]);
     }
 
     public function show(string $slug): View
@@ -41,6 +49,7 @@ class ProductController extends Controller
         return view('products.show', [
             'product' => $this->catalog->transformProduct($product),
             'relatedProducts' => $relatedProducts,
+            'seo' => SeoMeta::forProduct($product),
         ]);
     }
 }

@@ -117,6 +117,8 @@ Migrations live in `database/migrations/` (prefix `2026_06_29_*` for domain tabl
 | `/products/{slug}` | `store.products.show` | Product detail |
 | `/checkout` | `store.checkout` | Checkout page |
 | `POST /checkout` | `store.checkout.store` | Place order (rate limited) |
+| `/sitemap.xml` | `store.sitemap` | XML sitemap (homepage, collections, products with images) |
+| `/sitemap/generate` | `store.sitemap.generate` | Regenerate and save `public/sitemap.xml` (rate limited) |
 
 **Legacy redirects (301):** `/phone-accessories` → `/collections`, `/products` → `/collections/all`, `/categories/{slug}` → `/collections/{slug}`.
 
@@ -168,6 +170,9 @@ Admin accounts are seeded via `database/seeders/UserSeeder.php` (roles: `admin`,
 - Slug uniqueness checks include trashed records
 - 301 redirects for old URL structure
 - CSRF protection on all POST/PUT/DELETE forms
+- Open Graph / Twitter Card meta tags for social sharing (Facebook, Instagram, X)
+- JSON-LD structured data on product pages
+- XML sitemap at `/sitemap.xml` with product and category images for Google
 
 ---
 
@@ -214,8 +219,6 @@ The following are referenced in project rules or UI but not fully built:
 
 - Customer accounts on storefront
 - Payment gateways (card, wallet)
-- Sitemap package (`spatie/laravel-sitemap`)
-- Full SEO meta/JSON-LD on every page
 - Admin customers module (placeholder view only)
 - Brand soft deletes
 - Repository pattern layer (services used instead for now)

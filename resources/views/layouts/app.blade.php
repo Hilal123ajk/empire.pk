@@ -4,8 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="@yield('meta_description', 'Empire.pk - Premium mobile accessories in Pakistan. Phone cases, screen protectors, chargers, AirPods & more.')">
-    <title>@yield('title', 'Empire.pk') — Mobile Accessories Store</title>
+
+    @php
+        $resolvedSeo = $seo ?? null;
+
+        if (! $resolvedSeo) {
+            $fallbackTitle = trim(strip_tags((string) $__env->yieldContent('title'))) ?: 'Empire.pk';
+            $fallbackDescription = trim(strip_tags((string) $__env->yieldContent('meta_description')))
+                ?: 'Empire.pk - Premium mobile accessories in Pakistan. Phone cases, screen protectors, chargers, AirPods & more.';
+
+            $resolvedSeo = \App\Support\SeoMeta::forPage(
+                title: $fallbackTitle,
+                description: $fallbackDescription,
+            );
+        }
+    @endphp
+    <x-seo-meta :seo="$resolvedSeo" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

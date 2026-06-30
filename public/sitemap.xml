@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+    <url>
+    <loc>http://127.0.0.1:8000</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+            </url>
+    <url>
+    <loc>http://127.0.0.1:8000/collections</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+            </url>
+    <url>
+    <loc>http://127.0.0.1:8000/collections/all</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+            </url>
+    <url>
+    <loc>http://127.0.0.1:8000/collections/cases-covers</loc>
+    <lastmod>2026-06-29T16:05:51+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+    <image:loc>http://127.0.0.1:8000/storage/categories/7CZgJKKJmHsL5d9ZEmf41jiGBx6s4maggKvoswiw.jpg</image:loc>
+    <image:caption>Cases &amp; Covers</image:caption>
+</image:image>
+        </url>
+    <url>
+    <loc>http://127.0.0.1:8000/collections/headphones-airbuds</loc>
+    <lastmod>2026-06-29T16:14:05+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+    <image:loc>http://127.0.0.1:8000/storage/categories/iBlPV7Ja1en4bRQ9KKMja2i6lg04DGriEq4gTnJO.jpg</image:loc>
+    <image:caption>Headphones &amp; Airbuds</image:caption>
+</image:image>
+        </url>
+    <url>
+    <loc>http://127.0.0.1:8000/products/iphone-13-14-15-16-pro-pro-max</loc>
+    <lastmod>2026-06-30T09:57:53+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+    <image:loc>http://127.0.0.1:8000/storage/products/YnMU6KcWqUrGEKHIB6kVvzW6W5PoJcWybXPPvs3H.png</image:loc>
+    <image:caption>Iphone 13, 14, 15, 16 Pro &amp; Pro max</image:caption>
+</image:image>
+<image:image>
+    <image:loc>http://127.0.0.1:8000/storage/products/gallery/cLekj0v2EYJVi8PM4EAdV4PXQ5oE5gyjws5Ac6x2.png</image:loc>
+    <image:caption>Blue</image:caption>
+</image:image>
+<image:image>
+    <image:loc>http://127.0.0.1:8000/storage/products/gallery/JRhHJV7rtGM9BnHVhI5h4gmeCw2nzGG5meHLmlOK.png</image:loc>
+    <image:caption>Black</image:caption>
+</image:image>
+<image:image>
+    <image:loc>http://127.0.0.1:8000/storage/products/gallery/h6QVhyy1oBMbIAFON3ecrFWCNWRA0qh2TkDjfHJe.png</image:loc>
+    <image:caption>Gray</image:caption>
+</image:image>
+        </url>
+    <url>
+    <loc>http://127.0.0.1:8000/products/girls-iphone-17-pro-max-cases</loc>
+    <lastmod>2026-06-30T09:23:10+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+    <image:loc>http://127.0.0.1:8000/storage/products/nY1Iv1q5UJ7mj9sRiK99qMW3TyuXpRUWSnKwl8GV.png</image:loc>
+    <image:caption>Girls Iphone 17 Pro Max Cases</image:caption>
+</image:image>
+<image:image>
+    <image:loc>http://127.0.0.1:8000/storage/products/gallery/fe6dyp3HmyhsE2hc1w5ijzjlFznUw9uNi1idiiKz.png</image:loc>
+    <image:caption>Matte Black, Gray</image:caption>
+</image:image>
+        </url>
+    <url>
+    <loc>http://127.0.0.1:8000/products/iphone-17-cover-case</loc>
+    <lastmod>2026-06-30T09:16:33+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+    <image:loc>http://127.0.0.1:8000/storage/products/vZpkffuE19xjdE6YLNhf9pcKyc2zSFirXRAtir0a.png</image:loc>
+    <image:caption>Iphone 17 Cover Case</image:caption>
+</image:image>
+<image:image>
+    <image:loc>http://127.0.0.1:8000/storage/products/gallery/DJkTnSpIeq8Bwzv6Rt1ixMEHUi6HNDcn3ggMrqsK.jpg</image:loc>
+    <image:caption>Iphone 17 Cover Case</image:caption>
+</image:image>
+        </url>
+</urlset>
