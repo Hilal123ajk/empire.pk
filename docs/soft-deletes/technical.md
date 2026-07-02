@@ -68,7 +68,7 @@ Route::delete('/products/{productId}/force', ... 'forceDestroy');
 
 ### Categories
 
-Same pattern under `/admin/categories/`.
+Same pattern under `/admin/categories/` and `/admin/sub-categories/`.
 
 Restore/force routes use `{productId}` / `{categoryId}` with `onlyTrashed()->findOrFail()` because implicit route model binding excludes trashed models by default.
 
@@ -84,7 +84,7 @@ Restore/force routes use `{productId}` / `{categoryId}` with `onlyTrashed()->fin
 
 ### CategoryController
 
-- `destroy()` — blocked if `$category->products()->exists()` (includes non-trashed products)
+- `destroy()` — blocked if `$category->products()->exists()` or (main categories) active sub-categories exist
 - `forceDestroy()` — same product check before permanent delete
 
 ---

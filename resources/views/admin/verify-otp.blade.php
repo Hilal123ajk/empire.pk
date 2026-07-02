@@ -36,7 +36,7 @@
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl text-center text-2xl tracking-[0.35em] font-bold text-navy-900 focus:outline-none focus:ring-2 focus:ring-empire-500 @error('otp') border-red-300 @enderror">
             </div>
 
-            <button type="submit" class="w-full py-3 bg-navy-900 hover:bg-navy-800 text-white font-bold rounded-xl transition hover:cursor-pointer">
+            <button type="submit" class="w-full py-3 bg-navy-900 hover:bg-navy-800 text-white font-bold rounded-xl transition">
                 Verify & Sign In
             </button>
         </form>

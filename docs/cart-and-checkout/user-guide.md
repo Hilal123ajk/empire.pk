@@ -23,16 +23,18 @@ How customers shop and place orders—and what staff should know about the check
 ### Checkout
 
 1. From the cart, go to **Checkout** (or visit `/checkout`).
-2. Fill in:
+2. On mobile, use the **Back** button at the top to return to the previous page.
+3. Fill in:
    - First and last name
    - Mobile number (Pakistani format: `03XX XXXXXXX`)
    - Delivery address (at least a few words—full street details)
    - City (from the dropdown list)
    - Optional notes for delivery
 3. Payment method is **Cash on Delivery (COD)** only.
-4. Click **Place Order**.
-5. A **confirmation popup** asks you to verify details before the order is sent.
-6. After success, you see a thank-you message. The team will contact you to confirm delivery.
+4. Review the order summary — a **flat delivery fee** applies (shown in cart and checkout).
+5. Click **Place Order**.
+6. A **confirmation popup** asks you to verify details before the order is sent.
+7. After success, you see a thank-you message. The team will contact you to confirm delivery.
 
 ---
 

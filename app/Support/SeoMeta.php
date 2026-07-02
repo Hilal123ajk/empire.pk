@@ -62,9 +62,9 @@ final class SeoMeta
     public static function forCategory(Category $category): self
     {
         $description = self::truncate(strip_tags($category->description ?? ''))
-            ?: 'Shop '.$category->title.' at Empire.pk. Premium mobile accessories with free delivery in Pakistan.';
+            ?: 'Shop '.$category->title.' at Empire.pk. Premium mobile accessories delivered across Pakistan.';
 
-        $canonical = route('store.collections.show', $category->slug);
+        $canonical = $category->storeUrl();
         $image = $category->image_public_url ?: self::defaultOgImage();
 
         return new self(

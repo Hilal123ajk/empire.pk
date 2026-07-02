@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
@@ -18,11 +19,12 @@ use Illuminate\Support\Facades\Route;
 Route::name('store.')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
 
-    Route::get('/collections/all', [StoreProductController::class, 'index'])->name('products.index');
+    Route::get('/categories/all', [StoreProductController::class, 'index'])->name('products.index');
     Route::get('/products/{slug}', [StoreProductController::class, 'show'])->name('products.show');
 
-    Route::get('/collections', [HomeController::class, 'phoneAccessories'])->name('collections.index');
-    Route::get('/collections/{slug}', [StoreCategoryController::class, 'show'])->name('collections.show');
+    Route::get('/categories', [HomeController::class, 'categories'])->name('categories.index');
+    Route::get('/categories/{parentSlug}/{slug}', [StoreCategoryController::class, 'showSubcategory'])->name('categories.sub.show');
+    Route::get('/categories/{slug}', [StoreCategoryController::class, 'show'])->name('categories.show');
 
     Route::get('/checkout', fn () => view('checkout', [
         'seo' => SeoMeta::forPage(
@@ -41,9 +43,11 @@ Route::name('store.')->group(function () {
         ->name('sitemap.generate');
 });
 
-Route::redirect('/phone-accessories', '/collections', 301);
-Route::redirect('/products', '/collections/all', 301);
-Route::get('/categories/{slug}', fn (string $slug) => redirect("/collections/{$slug}", 301));
+Route::redirect('/phone-accessories', '/categories', 301);
+Route::redirect('/products', '/categories/all', 301);
+Route::redirect('/collections', '/categories', 301);
+Route::redirect('/collections/all', '/categories/all', 301);
+Route::get('/collections/{slug}', fn (string $slug) => redirect("/categories/{$slug}", 301));
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -71,6 +75,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
         Route::post('/categories/{categoryId}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
         Route::delete('/categories/{categoryId}/force', [CategoryController::class, 'forceDestroy'])->name('categories.force-destroy');
+
+        Route::get('/sub-categories', [SubCategoryController::class, 'index'])->name('subcategories');
+        Route::post('/sub-categories', [SubCategoryController::class, 'store'])->name('subcategories.store');
+        Route::put('/sub-categories/{category}', [SubCategoryController::class, 'update'])->name('subcategories.update');
+        Route::delete('/sub-categories/{category}', [SubCategoryController::class, 'destroy'])->name('subcategories.destroy');
+        Route::post('/sub-categories/{categoryId}/restore', [SubCategoryController::class, 'restore'])->name('subcategories.restore');
+        Route::delete('/sub-categories/{categoryId}/force', [SubCategoryController::class, 'forceDestroy'])->name('subcategories.force-destroy');
 
         Route::get('/brands', [BrandController::class, 'index'])->name('brands');
         Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');

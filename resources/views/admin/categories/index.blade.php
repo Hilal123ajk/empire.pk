@@ -2,7 +2,7 @@
 
 @section('title', 'Categories')
 @section('page_title', 'Categories')
-@section('page_subtitle', 'Organize products into categories')
+@section('page_subtitle', 'Main categories shown on the store homepage')
 
 @section('header_action')
 <button type="button" @click="$dispatch('open-category-drawer')" class="px-4 py-2 bg-navy-900 text-white text-sm font-semibold rounded-xl hover:bg-navy-800 transition flex items-center gap-2">
@@ -129,6 +129,8 @@
                 'meta_keywords' => $category->meta_keywords,
                 'is_active' => $category->is_active,
                 'image' => $category->image_public_url,
+                'children_count' => $category->children_count,
+                'store_url' => $category->storeUrl(),
             ];
         @endphp
         <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden group hover:shadow-md transition cursor-pointer"
@@ -142,6 +144,9 @@
                     <div>
                         <h3 class="font-bold text-navy-900">{{ $category->title }}</h3>
                         <p class="text-xs text-gray-400 mt-0.5">{{ $category->slug }}</p>
+                        @if ($category->children_count > 0)
+                        <p class="text-[11px] text-gray-500 mt-1">{{ $category->children_count }} sub-categor{{ $category->children_count === 1 ? 'y' : 'ies' }}</p>
+                        @endif
                     </div>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 {{ $showingTrashed ? 'bg-red-100 text-red-800' : ($category->is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600') }}">
                         {{ $showingTrashed ? 'In Trash' : ($category->is_active ? 'Active' : 'Inactive') }}
@@ -177,7 +182,7 @@
                                 class="w-full py-2 text-xs font-semibold text-center border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition">Delete</button>
                     </form>
                     @else
-                    <a href="{{ route('store.collections.show', $category->slug) }}" target="_blank"
+                    <a href="{{ $category->storeUrl() }}" target="_blank"
                        class="flex-1 py-2 text-xs font-semibold text-center border border-gray-200 rounded-lg hover:bg-gray-50 transition">View Store</a>
                     <button type="button" @click="openEdit(@js($categoryData))"
                             class="flex-1 py-2 text-xs font-semibold text-center bg-navy-900 text-white rounded-lg hover:bg-navy-800 transition">Edit</button>
@@ -224,7 +229,7 @@
                     <label class="text-xs font-semibold text-gray-600 block mb-1">Description</label>
                     <textarea name="description" rows="3"
                               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">{{ old('_form') === 'create' ? old('description') : '' }}</textarea>
-                    <p class="text-[11px] text-gray-400 mt-1">Used on category pages and as the SEO meta description.</p>
+                    <p class="text-[11px] text-gray-400 mt-1">SEO only — not shown on the storefront category page.</p>
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-600 block mb-1">Image <span class="text-red-500">*</span></label>
@@ -348,7 +353,7 @@
                             </div>
                         </template>
                     </dl>
-                    <a :href="'/collections/' + selectedCategory.slug" target="_blank"
+                    <a :href="selectedCategory.store_url" target="_blank"
                        class="block text-center py-2.5 text-sm font-semibold text-empire-600 border border-empire-200 rounded-xl hover:bg-empire-50">View on Store →</a>
                 </div>
             </template>

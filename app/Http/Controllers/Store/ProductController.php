@@ -33,7 +33,7 @@ class ProductController extends Controller
         $product = Product::query()
             ->where('slug', $slug)
             ->where('is_active', true)
-            ->with(['category:id,slug,title', 'brand:id,title,slug', 'images'])
+            ->with(['category.parent:id,slug,title', 'category:id,slug,title,parent_id', 'brand:id,title,slug', 'images'])
             ->firstOrFail();
 
         $relatedProducts = $this->catalog->transformProducts(
@@ -41,7 +41,7 @@ class ProductController extends Controller
                 ->where('is_active', true)
                 ->where('category_id', $product->category_id)
                 ->where('id', '!=', $product->id)
-                ->with(['category:id,slug,title', 'brand:id,title,slug', 'images'])
+                ->with(['category.parent:id,slug,title', 'category:id,slug,title,parent_id', 'brand:id,title,slug', 'images'])
                 ->limit(4)
                 ->get()
         );

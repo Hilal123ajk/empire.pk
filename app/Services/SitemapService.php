@@ -27,7 +27,7 @@ class SitemapService
         );
 
         $sitemap->add(
-            Url::create(route('store.collections.index'))
+            Url::create(route('store.categories.index'))
                 ->setPriority(0.9)
                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
         );
@@ -40,11 +40,12 @@ class SitemapService
 
         Category::query()
             ->where('is_active', true)
-            ->select(['id', 'title', 'slug', 'image_url', 'updated_at'])
+            ->with('parent:id,slug')
+            ->select(['id', 'title', 'slug', 'image_url', 'parent_id', 'updated_at'])
             ->orderBy('title')
             ->each(function (Category $category) use ($sitemap): void {
-                $url = Url::create(route('store.collections.show', $category->slug))
-                    ->setPriority(0.9)
+                $url = Url::create($category->storeUrl())
+                    ->setPriority($category->isRoot() ? 0.9 : 0.85)
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
                     ->setLastModificationDate($category->updated_at);
 

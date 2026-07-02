@@ -75,28 +75,7 @@ document.addEventListener('alpine:init', () => {
         get deliveryFee() {
             if (this.total === 0) return 0;
 
-            const config = window.EMPIRE_STORE.delivery || {};
-            const minimum = Number(config.minimum ?? 2500);
-            const fee = Number(config.fee ?? 199);
-            const slugs = config.categorySlugs || [];
-            const patterns = config.categoryPatterns || [];
-
-            const eligibleSubtotal = this.items.reduce((sum, item) => {
-                const product = this.catalogProduct(item);
-                const category = String(product?.category || '').toLowerCase();
-                if (!category) return sum;
-
-                const slugMatch = slugs.includes(category);
-                const patternMatch = patterns.some((pattern) => category.includes(String(pattern).toLowerCase()));
-
-                if (slugMatch || patternMatch) {
-                    return sum + this.unitPrice(item) * item.quantity;
-                }
-
-                return sum;
-            }, 0);
-
-            return eligibleSubtotal >= minimum ? 0 : fee;
+            return Number(window.EMPIRE_STORE.delivery?.fee ?? 199);
         },
 
         get grandTotal() {
@@ -217,6 +196,8 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('productFilters', () => ({
         search: '',
         category: '',
+        rootCategory: '',
+        includeChildProducts: false,
         brand: '',
         minPrice: 0,
         maxPrice: 50000,
@@ -226,7 +207,11 @@ document.addEventListener('alpine:init', () => {
         get filteredProducts() {
             let products = [...window.EMPIRE_STORE.products];
 
-            if (this.category) {
+            if (this.includeChildProducts && this.rootCategory) {
+                products = products.filter(p =>
+                    p.parentCategory === this.rootCategory || p.category === this.rootCategory
+                );
+            } else if (this.category) {
                 products = products.filter(p => p.category === this.category);
             }
             if (this.brand) {
@@ -264,6 +249,8 @@ document.addEventListener('alpine:init', () => {
         resetFilters() {
             this.search = '';
             this.category = '';
+            this.rootCategory = '';
+            this.includeChildProducts = false;
             this.brand = '';
             this.minPrice = 0;
             this.maxPrice = 50000;

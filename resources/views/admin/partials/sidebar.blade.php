@@ -15,8 +15,9 @@
             ];
 
             $catalogLinks = [
-                ['route' => 'admin.categories', 'url' => '/admin/categories', 'label' => 'Categories'],
-                ['route' => 'admin.brands', 'url' => '/admin/brands', 'label' => 'Brands'],
+                ['route' => 'admin.categories', 'url' => '/admin/categories', 'label' => 'Categories', 'indent' => true],
+                ['route' => 'admin.subcategories', 'url' => '/admin/sub-categories', 'label' => 'Sub Categories', 'indent' => true, 'sub' => true],
+                ['route' => 'admin.brands', 'url' => '/admin/brands', 'label' => 'Brands', 'indent' => true],
             ];
 
             $bottomLinks = [
@@ -37,8 +38,8 @@
             <p class="px-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Catalog</p>
             @foreach($catalogLinks as $link)
             <a href="{{ url($link['url']) }}"
-               class="sidebar-link flex items-center gap-3 pl-8 pr-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-navy-900 transition {{ request()->routeIs($link['route']) ? 'active' : '' }}">
-                <span class="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0"></span>
+               class="sidebar-link flex items-center gap-3 {{ ! empty($link['sub']) ? 'pl-11' : 'pl-8' }} pr-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-navy-900 transition {{ request()->routeIs($link['route']) ? 'active' : '' }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ ! empty($link['sub']) ? 'bg-gray-200' : 'bg-gray-300' }} shrink-0"></span>
                 {{ $link['label'] }}
             </a>
             @endforeach

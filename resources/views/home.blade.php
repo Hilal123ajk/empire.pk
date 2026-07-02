@@ -47,9 +47,8 @@
 {{-- Trust badges --}}
 <section class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 py-4">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             @foreach([
-                ['icon' => 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4', 'title' => 'Free Delivery', 'sub' => 'Cases & covers above Rs. 2,500'],
                 ['icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'title' => 'Genuine Products', 'sub' => '100% Authentic'],
                 ['icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 'title' => 'Cash on Delivery', 'sub' => 'Pay when you receive'],
                 ['icon' => 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15', 'title' => 'Easy Returns', 'sub' => '7-day return policy'],
@@ -73,9 +72,8 @@
     <div class="flex items-center justify-between mb-6 md:mb-8">
         <div>
             <h2 class="text-2xl md:text-3xl font-extrabold text-navy-900">Shop by Category</h2>
-            <p class="text-gray-500 text-sm mt-1">Find the perfect accessory for your device</p>
         </div>
-        <a href="{{ route('store.collections.index') }}" class="hidden sm:flex items-center gap-1 text-sm font-semibold text-empire-600 hover:text-empire-700 transition">
+        <a href="{{ route('store.categories.index') }}" class="hidden sm:flex items-center gap-1 text-sm font-semibold text-empire-600 hover:text-empire-700 transition">
             View All
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </a>
@@ -83,7 +81,7 @@
 
     <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 md:gap-4" x-data="{}">
         <template x-for="cat in EMPIRE_STORE.categories.slice(0, 12)" :key="cat.slug">
-            <a :href="'/collections/' + cat.slug" class="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-empire-300 transition-all duration-300">
+            <a :href="'/categories/' + cat.slug" class="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-empire-300 transition-all duration-300">
                 <div class="aspect-square overflow-hidden bg-gray-100">
                     <img :src="cat.image" :alt="cat.name" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 </div>
@@ -172,7 +170,7 @@
             <div>
                 <h2 class="text-2xl md:text-4xl font-extrabold text-white mb-3 md:mb-2">Protect Your Phone in Style</h2>
                 <p class="text-gray-300 text-sm md:text-base mb-6 md:mb-6 max-w-md mx-auto leading-relaxed">Premium cases from Spigen, UAG, and more — starting at Rs. 899</p>
-                <a href="{{ route('store.collections.show', 'phone-cases') }}" class="inline-flex px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-bold rounded-xl transition">Shop Cases</a>
+                <a href="{{ route('store.categories.show', 'phone-cases') }}" class="inline-flex px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-bold rounded-xl transition">Shop Cases</a>
             </div>
         </div>
     </div>

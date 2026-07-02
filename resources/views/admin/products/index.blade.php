@@ -29,7 +29,8 @@
         'slug' => old('slug'),
         'description' => old('description'),
         'sku' => old('sku'),
-        'category_id' => old('category_id'),
+        'category_id' => old('sub_category_id') ?: old('main_category_id'),
+        'category_parent_id' => old('sub_category_id') ? old('main_category_id') : null,
         'brand_id' => old('brand_id'),
         'price' => old('price'),
         'cost_price' => old('cost_price'),
@@ -52,12 +53,16 @@
     editing: {{ $isEditing ? 'true' : 'false' }},
     editingId: {{ $isEditing ? (int) old('_product_id') : 'null' }},
     selectedProduct: @js($editProductFromOld),
+    subcategoriesByParent: @js($subcategoriesByParent),
+    mainCategoryId: @js($oldMainCategoryId ?? ''),
+    createSubCategoryId: @js($oldSubCategoryId ?? ''),
+    editMainCategoryId: '',
     editForm: {
         name: '',
         slug: '',
         description: '',
         sku: '',
-        category_id: '',
+        sub_category_id: '',
         brand_id: '',
         price: '',
         cost_price: '',
@@ -68,13 +73,19 @@
         has_variants: true,
     },
 
+    subcategoriesFor(mainId) {
+        return this.subcategoriesByParent[mainId] ?? this.subcategoriesByParent[String(mainId)] ?? [];
+    },
+
     resetEditForm(product = null) {
+        const isSubCategory = product?.category_parent_id != null && product?.category_parent_id !== '';
+
         this.editForm = {
             name: product?.name ?? '',
             slug: product?.slug ?? '',
             description: product?.description ?? '',
             sku: product?.sku ?? '',
-            category_id: product?.category_id ?? '',
+            sub_category_id: isSubCategory ? String(product.category_id) : '',
             brand_id: product?.brand_id ?? '',
             price: product?.price ?? '',
             cost_price: product?.cost_price ?? '',
@@ -84,6 +95,9 @@
             is_featured: product?.is_featured ?? false,
             has_variants: product?.has_variants ?? true,
         };
+        this.editMainCategoryId = product
+            ? String(isSubCategory ? product.category_parent_id : product.category_id)
+            : '';
         this.hasVariants = product?.has_variants ?? true;
     },
 
@@ -107,6 +121,8 @@
         this.editing = false;
         this.editingId = null;
         this.selectedProduct = null;
+        this.mainCategoryId = '';
+        this.createSubCategoryId = '';
         this.colorLabelCount = 0;
         this.newGalleryLabelCount = 0;
         this.hasVariants = true;
@@ -146,8 +162,12 @@
                class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">
         <select name="category_id" class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
             <option value="">All Categories</option>
-            @foreach ($categories as $category)
-            <option value="{{ $category->id }}" @selected($categoryId === $category->id)>{{ $category->title }}</option>
+            @foreach ($mainCategories as $main)
+            <optgroup label="{{ $main->title }}">
+                @foreach ($subcategories->where('parent_id', $main->id) as $sub)
+                <option value="{{ $sub->id }}" @selected($categoryId === $sub->id)>{{ $sub->title }}</option>
+                @endforeach
+            </optgroup>
             @endforeach
         </select>
         <select name="brand_id" class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
@@ -204,7 +224,12 @@
                             'description' => $product->description,
                             'sku' => $product->sku,
                             'category_id' => $product->category_id,
-                            'category_title' => $product->category?->title,
+                            'category_parent_id' => $product->category?->parent_id,
+                            'category_title' => $product->category
+                                ? ($product->category->parent
+                                    ? $product->category->parent->title.' › '.$product->category->title
+                                    : $product->category->title)
+                                : null,
                             'brand_id' => $product->brand_id,
                             'brand_title' => $product->brand?->title,
                             'price' => $product->price,
@@ -344,7 +369,7 @@
                 @csrf
                 <input type="hidden" name="_form" value="create">
                 @foreach ($filterParams as $key => $value)
-                @if (! in_array($key, ['category_id', 'brand_id'], true))
+                @if (! in_array($key, ['main_category_id', 'sub_category_id', 'brand_id'], true))
                 <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                 @endif
                 @endforeach
@@ -371,23 +396,38 @@
                                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-empire-500">
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-gray-600 block mb-1">Category <span class="text-red-500">*</span></label>
-                        <select name="category_id" required class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
-                            <option value="">Select category</option>
-                            @foreach ($categories as $category)
-                            <option value="{{ $category->id }}" @selected(old('_form') === 'create' && (int) old('category_id') === $category->id)>{{ $category->title }}</option>
+                        <label class="text-xs font-semibold text-gray-600 block mb-1">Brand</label>
+                        <select name="brand_id" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
+                            <option value="">No brand</option>
+                            @foreach ($brands as $brand)
+                            <option value="{{ $brand->id }}" @selected(old('_form') === 'create' && (int) old('brand_id') === $brand->id)>{{ $brand->title }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="text-xs font-semibold text-gray-600 block mb-1">Brand</label>
-                    <select name="brand_id" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
-                        <option value="">No brand</option>
-                        @foreach ($brands as $brand)
-                        <option value="{{ $brand->id }}" @selected(old('_form') === 'create' && (int) old('brand_id') === $brand->id)>{{ $brand->title }}</option>
-                        @endforeach
-                    </select>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 block mb-1">Main Category <span class="text-red-500">*</span></label>
+                        <select name="main_category_id" x-model="mainCategoryId" @change="createSubCategoryId = ''" required
+                                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
+                            <option value="">Select main category</option>
+                            @foreach ($mainCategories as $main)
+                            <option value="{{ $main->id }}" @selected(old('_form') === 'create' && (int) old('main_category_id') === $main->id)>{{ $main->title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 block mb-1">Sub Category</label>
+                        <select name="sub_category_id" x-model="createSubCategoryId"
+                                :disabled="!mainCategoryId"
+                                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500 disabled:bg-gray-100 disabled:text-gray-400">
+                            <option value="">None (main category only)</option>
+                            <template x-for="sub in subcategoriesFor(mainCategoryId)" :key="sub.id">
+                                <option :value="sub.id" x-text="sub.title"></option>
+                            </template>
+                        </select>
+                        <p class="text-[11px] text-gray-400 mt-1">Optional. Leave empty to assign the product directly to the main category.</p>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -489,7 +529,7 @@
                 <input type="hidden" name="_form" value="edit">
                 <input type="hidden" name="_product_id" :value="editingId">
                 @foreach ($filterParams as $key => $value)
-                @if (! in_array($key, ['category_id', 'brand_id'], true))
+                @if (! in_array($key, ['main_category_id', 'sub_category_id', 'brand_id'], true))
                 <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                 @endif
                 @endforeach
@@ -516,24 +556,38 @@
                                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-empire-500">
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-gray-600 block mb-1">Category <span class="text-red-500">*</span></label>
-                        <select name="category_id" required x-model="editForm.category_id"
+                        <label class="text-xs font-semibold text-gray-600 block mb-1">Brand</label>
+                        <select name="brand_id" x-model="editForm.brand_id"
                                 class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
-                            @foreach ($categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->title }}</option>
+                            <option value="">No brand</option>
+                            @foreach ($brands as $brand)
+                            <option value="{{ $brand->id }}">{{ $brand->title }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="text-xs font-semibold text-gray-600 block mb-1">Brand</label>
-                    <select name="brand_id" x-model="editForm.brand_id"
-                            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
-                        <option value="">No brand</option>
-                        @foreach ($brands as $brand)
-                        <option value="{{ $brand->id }}">{{ $brand->title }}</option>
-                        @endforeach
-                    </select>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 block mb-1">Main Category <span class="text-red-500">*</span></label>
+                        <select name="main_category_id" x-model="editMainCategoryId" @change="editForm.sub_category_id = ''" required
+                                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500">
+                            <option value="">Select main category</option>
+                            @foreach ($mainCategories as $main)
+                            <option value="{{ $main->id }}">{{ $main->title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 block mb-1">Sub Category</label>
+                        <select name="sub_category_id" x-model="editForm.sub_category_id"
+                                :disabled="!editMainCategoryId"
+                                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-empire-500 disabled:bg-gray-100 disabled:text-gray-400">
+                            <option value="">None (main category only)</option>
+                            <template x-for="sub in subcategoriesFor(editMainCategoryId)" :key="sub.id">
+                                <option :value="sub.id" x-text="sub.title"></option>
+                            </template>
+                        </select>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>

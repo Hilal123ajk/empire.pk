@@ -3,6 +3,8 @@
 @section('title', 'Checkout — Empire.pk')
 
 @section('content')
+<x-mobile-back-nav :fallback="route('store.home')" />
+
 <section class="max-w-7xl mx-auto px-4 py-6 md:py-10" x-data="checkoutForm()">
     {{-- Success state --}}
     <div x-show="placed" x-cloak class="max-w-lg mx-auto text-center py-16">
@@ -143,7 +145,7 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-500">Delivery</span>
-                            <span class="font-medium text-emerald-600" x-text="$store.cart.deliveryFee === 0 ? 'FREE' : EMPIRE_STORE.formatPrice($store.cart.deliveryFee)"></span>
+                            <span class="font-medium text-navy-900" x-text="EMPIRE_STORE.formatPrice($store.cart.deliveryFee)"></span>
                         </div>
                         <hr class="border-gray-200">
                         <div class="flex justify-between text-base pt-1">

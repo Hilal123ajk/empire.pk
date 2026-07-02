@@ -43,9 +43,9 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                         Back to Home
                     </a>
-                    <a href="{{ route('store.collections.index') }}"
+                    <a href="{{ route('store.categories.index') }}"
                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl text-sm border border-white/10 transition backdrop-blur-sm">
-                        Browse Collections
+                        Browse Categories
                     </a>
                 </div>
 
@@ -54,7 +54,7 @@
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Popular categories</p>
                         <div class="flex flex-wrap gap-2 justify-center lg:justify-start">
                             @foreach (collect($storeCatalogCategories)->take(5) as $category)
-                                <a href="{{ route('store.collections.show', $category['slug']) }}"
+                                <a href="{{ route('store.categories.show', $category['slug']) }}"
                                    class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-empire-500/20 border border-white/10 hover:border-empire-500/40 text-gray-300 hover:text-empire-400 text-xs font-medium transition">
                                     {{ $category['name'] }}
                                 </a>

@@ -43,7 +43,7 @@
                 Remember me
             </label>
 
-            <button type="submit" class="w-full py-3 bg-navy-900 hover:bg-navy-800 text-white font-bold rounded-xl transition hover:cursor-pointer">
+            <button type="submit" class="w-full py-3 bg-navy-900 hover:bg-navy-800 text-white font-bold rounded-xl transition">
                 Sign In
             </button>
         </form>

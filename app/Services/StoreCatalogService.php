@@ -15,18 +15,36 @@ class StoreCatalogService
 {
     public function getCategoriesForStore(): array
     {
-        return Category::query()
+        $roots = Category::query()
+            ->whereNull('parent_id')
             ->where('is_active', true)
-            ->withCount(['products' => fn ($query) => $query->where('is_active', true)])
+            ->with(['children' => fn ($query) => $query->where('is_active', true)->orderBy('title')])
+            ->orderBy('title')
+            ->get();
+
+        return $roots
+            ->map(fn (Category $category) => $this->transformRootCategory($category))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getSubcategoriesForCategory(Category $category): array
+    {
+        $parent = $category->isRoot() ? $category : $category->parent;
+
+        if ($parent === null) {
+            return [];
+        }
+
+        return Category::query()
+            ->where('parent_id', $parent->id)
+            ->where('is_active', true)
             ->orderBy('title')
             ->get()
-            ->map(fn (Category $category) => [
-                'slug' => $category->slug,
-                'name' => $category->title,
-                'image' => $category->image_public_url,
-                'count' => $category->products_count,
-                'description' => $category->description,
-            ])
+            ->map(fn (Category $sub) => $this->transformSubcategory($sub, $parent))
             ->values()
             ->all();
     }
@@ -36,7 +54,7 @@ class StoreCatalogService
         return $this->transformProducts(
             Product::query()
                 ->where('is_active', true)
-                ->with(['category:id,slug,title', 'brand:id,title,slug', 'images'])
+                ->with(['category.parent:id,slug,title', 'category:id,slug,title,parent_id', 'brand:id,title,slug', 'images'])
                 ->orderByDesc('is_featured')
                 ->orderByDesc('created_at')
                 ->get()
@@ -61,7 +79,7 @@ class StoreCatalogService
         $products = Product::query()
             ->where('is_active', true)
             ->where('created_at', '>=', now()->subMonth())
-            ->with(['category:id,slug,title', 'brand:id,title,slug', 'images'])
+            ->with(['category.parent:id,slug,title', 'category:id,slug,title,parent_id', 'brand:id,title,slug', 'images'])
             ->get()
             ->shuffle()
             ->take($limit);
@@ -111,7 +129,7 @@ class StoreCatalogService
 
         $products = Product::query()
             ->whereIn('id', $pageIds)
-            ->with(['category:id,slug,title', 'brand:id,title,slug', 'images'])
+            ->with(['category.parent:id,slug,title', 'category:id,slug,title,parent_id', 'brand:id,title,slug', 'images'])
             ->get()
             ->sortBy(fn (Product $product) => $order[$product->id] ?? 0)
             ->values();
@@ -126,6 +144,29 @@ class StoreCatalogService
                 'pageName' => 'page',
             ]
         );
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getCategoriesForAdminSelect(): array
+    {
+        $categories = Category::query()
+            ->whereNotNull('parent_id')
+            ->where('is_active', true)
+            ->with('parent:id,title')
+            ->orderBy('title')
+            ->get(['id', 'title', 'parent_id']);
+
+        return $categories
+            ->map(fn (Category $category) => [
+                'id' => $category->id,
+                'title' => $category->parent
+                    ? $category->parent->title.' › '.$category->title
+                    : $category->title,
+            ])
+            ->values()
+            ->all();
     }
 
     /**
@@ -153,14 +194,21 @@ class StoreCatalogService
             ...$galleryUrls,
         ])));
 
+        $category = $product->category;
+        $rootCategorySlug = $category?->isSubcategory()
+            ? ($category->parent?->slug ?? '')
+            : ($category?->slug ?? '');
+
         return [
             'id' => $product->id,
             'slug' => $product->slug,
             'name' => $product->name,
             'brand' => $product->brand?->title ?? '',
             'brandSlug' => $product->brand?->slug ?? '',
-            'category' => $product->category?->slug ?? '',
-            'categoryName' => $product->category?->title ?? '',
+            'category' => $category?->slug ?? '',
+            'categoryName' => $category?->title ?? '',
+            'categoryUrl' => $category?->storeUrl() ?? '',
+            'parentCategory' => $rootCategorySlug,
             'price' => (float) $product->price,
             'originalPrice' => (float) $product->price,
             'discount' => 0,
@@ -192,6 +240,55 @@ class StoreCatalogService
             'featured' => $product->is_featured,
             'inStock' => $product->stock_quantity > 0,
             'sku' => $product->sku,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function transformRootCategory(Category $category): array
+    {
+        $categoryIds = $category->descendantIds();
+
+        $count = Product::query()
+            ->where('is_active', true)
+            ->whereIn('category_id', $categoryIds)
+            ->count();
+
+        return [
+            'slug' => $category->slug,
+            'name' => $category->title,
+            'image' => $category->image_public_url,
+            'count' => $count,
+            'description' => $category->description,
+            'subcategories' => $category->children
+                ->map(fn (Category $sub) => $this->transformSubcategory($sub, $category))
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function transformSubcategory(Category $subcategory, Category $parent): array
+    {
+        $count = Product::query()
+            ->where('is_active', true)
+            ->where('category_id', $subcategory->id)
+            ->count();
+
+        return [
+            'slug' => $subcategory->slug,
+            'name' => $subcategory->title,
+            'image' => $subcategory->image_public_url,
+            'count' => $count,
+            'description' => $subcategory->description,
+            'parentSlug' => $parent->slug,
+            'url' => route('store.categories.sub.show', [
+                'parentSlug' => $parent->slug,
+                'slug' => $subcategory->slug,
+            ]),
         ];
     }
 }

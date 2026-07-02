@@ -33,7 +33,8 @@ class ProductController extends Controller
 
         $products = Product::query()
             ->with([
-                'category:id,title,slug',
+                'category:id,title,slug,parent_id',
+                'category.parent:id,title',
                 'brand:id,title,slug',
                 'images' => fn ($query) => $query->orderBy('sort_order'),
             ])
@@ -44,7 +45,15 @@ class ProductController extends Controller
                         ->orWhere('slug', 'like', "%{$search}%");
                 });
             })
-            ->when($categoryId, fn ($query) => $query->where('category_id', $categoryId))
+            ->when($categoryId, function ($query) use ($categoryId): void {
+                $category = Category::query()->find($categoryId);
+
+                if ($category !== null && $category->parent_id === null) {
+                    $query->whereIn('category_id', $category->descendantIds());
+                } else {
+                    $query->where('category_id', $categoryId);
+                }
+            })
             ->when($brandId, fn ($query) => $query->where('brand_id', $brandId))
             ->when($status === 'active', fn ($query) => $query->where('is_active', true))
             ->when($status === 'inactive', fn ($query) => $query->where('is_active', false))
@@ -53,19 +62,46 @@ class ProductController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $categories = Category::query()->where('is_active', true)->orderBy('title')->get(['id', 'title']);
+        $mainCategories = Category::query()
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->orderBy('title')
+            ->get(['id', 'title']);
+
+        $subcategories = Category::query()
+            ->whereNotNull('parent_id')
+            ->where('is_active', true)
+            ->with('parent:id,title')
+            ->orderBy('title')
+            ->get(['id', 'title', 'parent_id']);
+
+        $subcategoriesByParent = $subcategories
+            ->groupBy('parent_id')
+            ->map(fn ($items) => $items->map(fn (Category $category) => [
+                'id' => $category->id,
+                'title' => $category->title,
+            ])->values())
+            ->all();
+
         $brands = Brand::query()->where('is_active', true)->orderBy('title')->get(['id', 'title']);
         $showingTrashed = $status === 'trashed';
 
+        $oldMainCategoryId = old('_form') ? old('main_category_id') : null;
+        $oldSubCategoryId = old('_form') ? old('sub_category_id') : null;
+
         return view('admin.products.index', compact(
             'products',
-            'categories',
+            'mainCategories',
+            'subcategories',
+            'subcategoriesByParent',
             'brands',
             'search',
             'categoryId',
             'brandId',
             'status',
             'showingTrashed',
+            'oldMainCategoryId',
+            'oldSubCategoryId',
         ));
     }
 

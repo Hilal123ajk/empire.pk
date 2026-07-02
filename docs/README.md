@@ -2,7 +2,7 @@
 
 Empire.pk is a Laravel-based e-commerce platform focused on mobile accessories (phone cases, screen protectors, AirPods accessories, and related products). The storefront is mobile-first; the admin panel provides catalog, order, and content management.
 
-This documentation covers **implemented features as of June 2026**. Each module has two guides:
+This documentation covers **implemented features as of July 2026**. Each module has two guides:
 
 | Guide | Audience |
 |-------|----------|
@@ -11,15 +11,28 @@ This documentation covers **implemented features as of June 2026**. Each module 
 
 ---
 
+## Recent updates (July 2026)
+
+- **Categories URL scheme** — `/categories` replaces `/collections`; two-level main + sub category hierarchy
+- **Store category pages** — sticky sub-nav with **All** tab; main pages aggregate sub-category products
+- **Admin sub-categories** — separate CRUD at `/admin/sub-categories`
+- **Product assignment** — main category required; sub-category optional
+- **Mobile back navigation** — category, product, and checkout pages on small screens
+- **Delivery** — flat fee only; free-delivery threshold removed
+- **Admin OTP login** — optional email verification step after password
+- **UI** — global pointer cursor on buttons and interactive controls via Vite CSS
+
+---
+
 ## Documentation Index
 
 | Module | Folder | What it covers |
 |--------|--------|----------------|
-| Storefront & URLs | [storefront/](storefront/) | Collections routing, navigation, SEO-friendly URLs |
+| Storefront & URLs | [storefront/](storefront/) | Category routing, two-level hierarchy, navigation, SEO-friendly URLs |
 | Products & Color Variants | [products-and-variants/](products-and-variants/) | Product detail pages, color/gallery selection |
 | Cart & Checkout | [cart-and-checkout/](cart-and-checkout/) | Shopping cart, checkout, order placement |
 | Admin Orders | [admin-orders/](admin-orders/) | Viewing orders, status updates, variant display |
-| Admin Catalog | [admin-catalog/](admin-catalog/) | Products, categories, brands CRUD |
+| Admin Catalog | [admin-catalog/](admin-catalog/) | Products, main categories, sub-categories, brands CRUD |
 | Soft Deletes & Confirmations | [soft-deletes/](soft-deletes/) | Trash, restore, permanent delete, confirm modals |
 
 ---
@@ -41,7 +54,7 @@ This documentation covers **implemented features as of June 2026**. Each module 
 | Component | Detail |
 |-----------|--------|
 | Templates | Blade |
-| CSS | Tailwind CSS (CDN on store/admin layouts) |
+| CSS | Tailwind CSS v4 via Vite (`resources/css/app.css`) |
 | Interactivity | Alpine.js 3.x (CDN) |
 | Store scripts | `public/js/store-app.js`, `public/js/store-data.js` |
 | Admin scripts | `public/js/admin-app.js`, `public/js/admin-data.js` |
@@ -51,7 +64,7 @@ This documentation covers **implemented features as of June 2026**. Each module 
 | Package | Purpose |
 |---------|---------|
 | Vite ^8 | Asset bundling (Laravel default) |
-| Tailwind CSS ^4 | Available via Vite; storefront uses CDN |
+| Tailwind CSS ^4 | Compiled via Vite into store/admin layouts |
 | PHPUnit ^12 | Automated tests |
 
 ### Composer packages (production)
@@ -69,14 +82,16 @@ No third-party e-commerce or payment SDK is integrated yet. Checkout uses **Cash
 app/
 ├── Http/
 │   ├── Controllers/
-│   │   ├── Admin/          # Admin panel (auth, CRUD, orders)
+│   │   ├── Admin/          # Admin panel (auth, CRUD, orders, OTP)
 │   │   └── Store/          # Public storefront
 │   ├── Middleware/         # AdminMiddleware
 │   └── Requests/           # Form validation (Admin + Store)
 ├── Models/                 # Product, Category, Brand, Order, etc.
+├── Jobs/                   # Queued jobs (e.g. SendAdminLoginOtp)
 ├── Services/
 │   ├── StoreCatalogService.php   # Store product/category data shaping
-│   └── OrderService.php          # Checkout → order persistence
+│   ├── OrderService.php          # Checkout → order persistence
+│   └── AdminOtpService.php       # Admin login OTP verification
 └── Traits/
     └── HasPublicStorageImage.php # Public URL helpers for uploads
 ```
@@ -95,14 +110,14 @@ app/
 | Table | Purpose |
 |-------|---------|
 | `users` | Admin/manager accounts (`role`: admin, manager) |
-| `categories` | Product categories (slug, image, SEO keywords) |
+| `categories` | Product categories with optional `parent_id` (main → sub hierarchy), slug, image, SEO keywords |
 | `brands` | Product brands |
 | `products` | Catalog items (price, stock, featured flag, soft deletes) |
 | `product_images` | Gallery / color variant images with optional labels |
 | `orders` | Customer orders from checkout |
 | `order_items` | Line items with variant snapshot (color, image URL) |
 
-Migrations live in `database/migrations/` (prefix `2026_06_29_*` for domain tables).
+Migrations live in `database/migrations/` (domain tables from `2026_06_29_*`; category hierarchy and admin OTP from `2026_07_02_*`).
 
 ---
 
@@ -111,16 +126,17 @@ Migrations live in `database/migrations/` (prefix `2026_06_29_*` for domain tabl
 | URL | Name | Description |
 |-----|------|-------------|
 | `/` | `store.home` | Homepage |
-| `/collections` | `store.collections.index` | Collections hub |
-| `/collections/all` | `store.products.index` | All products |
-| `/collections/{slug}` | `store.collections.show` | Category listing |
+| `/categories` | `store.categories.index` | Categories hub (all main categories) |
+| `/categories/all` | `store.products.index` | All products |
+| `/categories/{slug}` | `store.categories.show` | Main category listing (includes sub-category products) |
+| `/categories/{parentSlug}/{slug}` | `store.categories.sub.show` | Sub-category listing (that sub only) |
 | `/products/{slug}` | `store.products.show` | Product detail |
 | `/checkout` | `store.checkout` | Checkout page |
 | `POST /checkout` | `store.checkout.store` | Place order (rate limited) |
-| `/sitemap.xml` | `store.sitemap` | XML sitemap (homepage, collections, products with images) |
+| `/sitemap.xml` | `store.sitemap` | XML sitemap (homepage, categories, products with images) |
 | `/sitemap/generate` | `store.sitemap.generate` | Regenerate and save `public/sitemap.xml` (rate limited) |
 
-**Legacy redirects (301):** `/phone-accessories` → `/collections`, `/products` → `/collections/all`, `/categories/{slug}` → `/collections/{slug}`.
+**Legacy redirects (301):** `/phone-accessories` → `/categories`, `/products` → `/categories/all`, `/collections` → `/categories`, `/collections/all` → `/categories/all`, `/collections/{slug}` → `/categories/{slug}`.
 
 ---
 
@@ -129,9 +145,11 @@ Migrations live in `database/migrations/` (prefix `2026_06_29_*` for domain tabl
 | Area | Base path | Auth |
 |------|-----------|------|
 | Login | `/admin/login` | Guest only |
+| OTP verify | `/admin/login/verify` | Guest (pending OTP session) |
 | Dashboard | `/admin` | Admin middleware |
 | Products | `/admin/products` | Admin middleware |
 | Categories | `/admin/categories` | Admin middleware |
+| Sub Categories | `/admin/sub-categories` | Admin middleware |
 | Brands | `/admin/brands` | Admin middleware |
 | Orders | `/admin/orders` | Admin middleware |
 
@@ -143,17 +161,23 @@ Admin accounts are seeded via `database/seeders/UserSeeder.php` (roles: `admin`,
 
 ### User-facing (customer) features
 
-- Browse collections and categories with responsive, mobile-first layout
+- Browse categories with a **two-level hierarchy** (main categories and sub-categories)
+- Main category pages show all products in that category tree; sub-category pages show only that sub’s products
+- Sticky sub-category navbar on category pages (first tab labeled **All**)
+- **Mobile back navigation** on category detail, product detail, and checkout (browser back with sensible fallback)
 - View product details with **color/variant image selection**
 - Add items to cart (separate lines per color variant)
-- Checkout with **Cash on Delivery**, Pakistani phone validation, and order confirmation modal
+- Checkout with **Cash on Delivery**, Pakistani phone validation, flat delivery fee, and order confirmation modal
 - Cart drawer with continue-shopping link back to homepage
 
 ### Admin / manager features
 
-- Secure login and session-based admin access
+- Secure login with optional **email OTP verification** (queued job sends 5-digit code)
+- Session-based admin access
 - **Product CRUD** with main image, gallery/color images, labels, stock, pricing, SEO keywords
-- **Category CRUD** with image and slug management
+- **Main category + optional sub-category** assignment per product
+- **Category CRUD** (main categories only) with image and slug management
+- **Sub-category CRUD** under Catalog → Sub Categories
 - **Brand CRUD**
 - **Order list** with status updates and variant/color shown per line item
 - **Soft delete** for products and categories (move to trash, restore, delete permanently)
@@ -163,6 +187,7 @@ Admin accounts are seeded via `database/seeders/UserSeeder.php` (roles: `admin`,
 ### Technical / platform features
 
 - Laravel Form Request validation on admin and checkout endpoints
+- Global interactive cursor styles (`cursor: pointer` on buttons, links, selects, etc. via `app.css`)
 - Checkout rate limiting (`throttle:10,1`)
 - Order creation in DB transaction with stock checks
 - Variant snapshot on `order_items` (preserves color/image at order time)
@@ -190,6 +215,10 @@ php artisan key:generate
 php artisan migrate
 php artisan db:seed
 
+# Build frontend assets (Tailwind via Vite)
+npm install
+npm run build
+
 # Start server (upload-friendly PHP limits)
 php -d post_max_size=64M -d upload_max_filesize=15M artisan serve
 ```
@@ -202,11 +231,20 @@ Link storage for public uploads:
 php artisan storage:link
 ```
 
+For admin OTP emails in local development, run a queue worker so `SendAdminLoginOtp` jobs are processed:
+
+```bash
+php artisan queue:work
+```
+
+Or use `queue-worker.bat` / `start-queue-worker.bat` on Windows if present in the project root.
+
 ---
 
 ## Conventions
 
 - Product/category URLs use **slugs** (lowercase, hyphenated).
+- Main categories: `/categories/{slug}`. Sub-categories: `/categories/{parent-slug}/{slug}`.
 - Store queries automatically exclude soft-deleted records.
 - Currency display: **PKR (Rs.)**
 - Admin UI: drawers for create/edit/detail, filter bars on list pages, toast notifications via Alpine store.

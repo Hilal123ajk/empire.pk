@@ -24,7 +24,7 @@ When the page loads, **Main** is selected—the primary product image uploaded i
 
 1. Go to **Admin → Products**.
 2. Click **Add Product**.
-3. Fill in name, SKU, category, brand, price, stock, etc.
+3. Fill in name, SKU, **main category** (required), optional **sub category**, brand, price, stock, etc.
 4. Upload the **main product image** (required for good display).
 5. Optionally upload **Color Images** in the gallery section:
    - Upload one image per color

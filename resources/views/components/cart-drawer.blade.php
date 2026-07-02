@@ -86,8 +86,7 @@
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-500">Delivery</span>
-                    <span class="font-medium" :class="$store.cart.deliveryFee === 0 ? 'text-emerald-600' : 'text-navy-900'"
-                          x-text="$store.cart.deliveryFee === 0 ? 'FREE' : EMPIRE_STORE.formatPrice($store.cart.deliveryFee)"></span>
+                    <span class="font-medium text-navy-900" x-text="EMPIRE_STORE.formatPrice($store.cart.deliveryFee)"></span>
                 </div>
                 <div class="flex justify-between pt-2 border-t border-gray-200">
                     <span class="font-bold text-navy-900">Estimated Total</span>

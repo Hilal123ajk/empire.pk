@@ -14,8 +14,9 @@ The cart is **client-side** (Alpine.js + `localStorage` via `store-app.js`). Che
 |------|------|
 | `public/js/store-app.js` | `Alpine.store('cart')`, checkout form, confirm modal |
 | `resources/views/components/cart-drawer.blade.php` | Slide-out cart UI |
-| `resources/views/checkout.blade.php` | Checkout form + order confirm dialog |
-| `resources/views/layouts/app.blade.php` | Includes cart drawer, `.store-select` styles |
+| `resources/views/checkout.blade.php` | Checkout form + order confirm dialog + mobile back nav |
+| `resources/views/layouts/app.blade.php` | Includes cart drawer, Vite CSS |
+| `resources/views/components/mobile-back-nav.blade.php` | Mobile back bar on checkout |
 
 ### Cart store
 
@@ -38,6 +39,14 @@ Cart items structure (approximate):
 - Lines are unique by product + variant combination
 - **Continue Shopping** in cart drawer links to `route('store.home')`
 - `/cart` redirects to `/checkout` (`routes/web.php`)
+
+### Delivery fee
+
+**`App\Support\DeliveryPolicy`** applies a flat standard delivery fee from `config/empire.php` (`standard_delivery_fee`, default Rs. 199). Free-delivery thresholds and category-based rules were removed.
+
+### Mobile back navigation
+
+Checkout includes `<x-mobile-back-nav>` with fallback to `route('store.home')`. Uses `EMPIRE_STORE.goBack()` in `public/js/store-data.js`.
 
 ### Checkout confirm modal
 

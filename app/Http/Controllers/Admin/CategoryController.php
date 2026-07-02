@@ -25,6 +25,8 @@ class CategoryController extends Controller
         $status = request()->string('status')->toString();
 
         $categories = Category::query()
+            ->whereNull('parent_id')
+            ->withCount('children')
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('title', 'like', "%{$search}%")
@@ -38,12 +40,18 @@ class CategoryController extends Controller
 
         $showingTrashed = $status === 'trashed';
 
-        return view('admin.categories.index', compact('categories', 'search', 'status', 'showingTrashed'));
+        return view('admin.categories.index', compact(
+            'categories',
+            'search',
+            'status',
+            'showingTrashed',
+        ));
     }
 
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $data['parent_id'] = null;
         $data['image_url'] = $request->file('image')->store('categories', 'public');
         unset($data['image']);
 
@@ -62,7 +70,12 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
+        if ($category->parent_id !== null) {
+            abort(404);
+        }
+
         $data = $request->validated();
+        $data['parent_id'] = null;
 
         if ($request->hasFile('image')) {
             $existingPath = $category->getStoredImagePath();
@@ -85,16 +98,26 @@ class CategoryController extends Controller
         $this->activityLog->log('updated', 'category', $category->id, $category->title);
 
         return redirect()
-            ->route('admin.categories')
+            ->route('admin.categories', request()->only(['search', 'status']))
             ->with('success', 'Category updated successfully.');
     }
 
     public function destroy(Category $category): RedirectResponse
     {
+        if ($category->parent_id !== null) {
+            abort(404);
+        }
+
         if ($category->products()->exists()) {
             return redirect()
                 ->route('admin.categories', request()->only(['search', 'status']))
                 ->withErrors(['category' => 'Cannot delete a category that has products assigned.']);
+        }
+
+        if ($category->children()->exists()) {
+            return redirect()
+                ->route('admin.categories', request()->only(['search', 'status']))
+                ->withErrors(['category' => 'Cannot delete a category that has sub-categories. Remove them from Sub Categories first.']);
         }
 
         $name = $category->title;
@@ -111,7 +134,10 @@ class CategoryController extends Controller
 
     public function restore(int $categoryId): RedirectResponse
     {
-        $category = Category::onlyTrashed()->findOrFail($categoryId);
+        $category = Category::onlyTrashed()
+            ->whereNull('parent_id')
+            ->findOrFail($categoryId);
+
         $category->restore();
 
         $this->activityLog->log('restored', 'category', $category->id, $category->title);
@@ -123,12 +149,20 @@ class CategoryController extends Controller
 
     public function forceDestroy(int $categoryId): RedirectResponse
     {
-        $category = Category::onlyTrashed()->findOrFail($categoryId);
+        $category = Category::onlyTrashed()
+            ->whereNull('parent_id')
+            ->findOrFail($categoryId);
 
         if ($category->products()->exists()) {
             return redirect()
                 ->route('admin.categories', ['status' => 'trashed'])
                 ->withErrors(['category' => 'Cannot permanently delete a category that still has products assigned.']);
+        }
+
+        if ($category->children()->exists()) {
+            return redirect()
+                ->route('admin.categories', ['status' => 'trashed'])
+                ->withErrors(['category' => 'Cannot permanently delete a category that still has sub-categories.']);
         }
 
         $name = $category->title;

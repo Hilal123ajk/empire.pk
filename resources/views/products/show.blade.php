@@ -66,6 +66,8 @@
         this.$store.cart.add(this.product, this.quantity, openDrawer, this.selectedVariant);
     }
 }">
+    <x-mobile-back-nav :fallback="$product['categoryUrl'] ?: route('store.products.index')" />
+
     {{-- Breadcrumb --}}
     <div class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 py-3">
@@ -73,7 +75,7 @@
                 <a href="{{ url('/') }}" class="hover:text-empire-600">Home</a>
                 <span>/</span>
                 @if ($product['category'])
-                <a href="{{ route('store.collections.show', $product['category']) }}" class="hover:text-empire-600">{{ $product['categoryName'] }}</a>
+                <a href="{{ $product['categoryUrl'] ?: route('store.categories.show', $product['category']) }}" class="hover:text-empire-600">{{ $product['categoryName'] }}</a>
                 <span>/</span>
                 @endif
                 <span class="text-gray-600 line-clamp-1">{{ $product['name'] }}</span>
@@ -124,7 +126,7 @@
                     </p>
                 </div>
 
-                <p class="mt-3 md:mt-2 text-xs md:text-sm text-gray-600 leading-relaxed line-clamp-3 md:line-clamp-4" x-text="product.description || 'Premium quality mobile accessory from Empire.pk. Genuine product with warranty. Free delivery on cases & covers above Rs. 2,500.'"></p>
+                <p class="mt-3 md:mt-2 text-xs md:text-sm text-gray-600 leading-relaxed line-clamp-3 md:line-clamp-4" x-text="product.description || 'Premium quality mobile accessory from Empire.pk. Genuine product with warranty.'"></p>
 
                 {{-- Quantity & Add to cart --}}
                 <div class="mt-4 md:mt-3 flex flex-col sm:flex-row gap-2.5">
@@ -149,7 +151,6 @@
                 {{-- Trust info --}}
                 <div class="mt-4 md:mt-5 grid grid-cols-2 gap-2 md:gap-2.5">
                     @foreach([
-                        ['title' => 'Free Delivery', 'sub' => 'Cases & covers above Rs. 2,500'],
                         ['title' => 'Cash on Delivery', 'sub' => 'Pay when you receive'],
                         ['title' => '7-Day Returns', 'sub' => 'Easy exchange policy'],
                         ['title' => '100% Genuine', 'sub' => 'Authentic products only'],

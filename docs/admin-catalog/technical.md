@@ -2,7 +2,7 @@
 
 ## Overview
 
-Admin catalog management covers **Products**, **Categories**, and **Brands** with full CRUD, image uploads, validation via Form Requests, and Blade + Alpine drawer UIs.
+Admin catalog management covers **Products**, **Main Categories**, **Sub Categories**, and **Brands** with full CRUD, image uploads, validation via Form Requests, and Blade + Alpine drawer UIs.
 
 ---
 
@@ -10,7 +10,11 @@ Admin catalog management covers **Products**, **Categories**, and **Brands** wit
 
 - Middleware: `App\Http\Middleware\AdminMiddleware`
 - Login: `AuthController` + `LoginRequest`
+- Optional **email OTP** step after password validation (`AdminOtpService`, `SendAdminLoginOtp` job, `verify-otp.blade.php`)
+- OTP routes: `admin.login.verify`, `admin.login.verify.submit`, `admin.login.verify.resend`
 - Roles on `users.role`: `admin`, `manager` (both access admin routes currently)
+
+When OTP is required, credentials are validated first; a 5-digit code is queued to the admin’s email. Session stores pending user ID until verification succeeds. Run `php artisan queue:work` in development so OTP emails send.
 
 ---
 
@@ -42,6 +46,13 @@ Admin catalog management covers **Products**, **Categories**, and **Brands** wit
 - `UpdateProductRequest`
 - `ValidatesProductUploads` trait (file size/type rules)
 
+Product forms submit **`main_category_id`** (required) and **`sub_category_id`** (optional). Requests merge these into `category_id` in `prepareForValidation()`:
+
+- If sub-category selected → product `category_id` = sub-category
+- If sub-category empty → product `category_id` = main category
+
+`withValidator()` ensures a selected sub-category belongs to the chosen main category. Validated output strips `main_category_id` and `sub_category_id` before persistence.
+
 ### View
 
 **`resources/views/admin/products/index.blade.php`**
@@ -52,7 +63,9 @@ Admin catalog management covers **Products**, **Categories**, and **Brands** wit
 
 ---
 
-## Categories
+## Categories (main)
+
+Main categories have `parent_id = null`. Managed under **Admin → Categories**.
 
 ### Routes
 
@@ -62,7 +75,8 @@ Same CRUD pattern as products plus restore/force-destroy.
 
 **`App\Http\Controllers\Admin\CategoryController`**
 
-- `destroy()` blocked if `$category->products()->exists()`
+- Manages root categories only (`whereNull('parent_id')`)
+- `destroy()` blocked if `$category->products()->exists()` or active sub-categories exist
 - Image stored under `categories/` on public disk
 - Slug auto-generated from title if empty (`Category::generateUniqueSlug`)
 
@@ -73,6 +87,38 @@ Same CRUD pattern as products plus restore/force-destroy.
 - Grid cards with image, status badge
 - Search + **Trash** filter
 - Detail drawer with edit / trash actions
+
+---
+
+## Sub Categories
+
+Sub-categories have `parent_id` set to a main category. Managed under **Admin → Sub Categories** (`/admin/sub-categories`).
+
+### Routes
+
+| Method | URI | Action |
+|--------|-----|--------|
+| GET | `/admin/sub-categories` | List + filters |
+| POST | `/admin/sub-categories` | Create |
+| PUT | `/admin/sub-categories/{category}` | Update |
+| DELETE | `/admin/sub-categories/{category}` | Soft delete |
+| POST | `/admin/sub-categories/{categoryId}/restore` | Restore |
+| DELETE | `/admin/sub-categories/{categoryId}/force` | Permanent delete |
+
+### Controller
+
+**`App\Http\Controllers\Admin\SubCategoryController`**
+
+- CRUD for categories with non-null `parent_id`
+- Parent must be an active main category
+- Same image/slug/soft-delete patterns as main categories
+
+### View
+
+**`resources/views/admin/subcategories/index.blade.php`**
+
+- Grid cards grouped by parent category
+- Parent category selector on create/edit forms
 
 ---
 
@@ -100,8 +146,9 @@ Uses native `confirm()` for delete (not yet migrated to admin confirm dialog).
 |-----------|----------|
 | Admin layout | `resources/views/layouts/admin.blade.php` |
 | Confirm dialog | `resources/views/components/admin-confirm-dialog.blade.php` |
-| Sidebar | `resources/views/admin/partials/sidebar.blade.php` |
+| Sidebar | `resources/views/admin/partials/sidebar.blade.php` — Catalog section: Products, Categories, Sub Categories, Brands |
 | Admin Alpine stores | `public/js/admin-app.js` — `adminUi`, `adminConfirm` |
+| Global cursor styles | `resources/css/app.css` — pointer cursor on buttons, links, selects, labels |
 
 ### Image handling
 
@@ -118,8 +165,9 @@ Requires `php artisan storage:link` for `/storage/...` URLs.
 
 | Entity | Notable rules |
 |--------|----------------|
-| Product | Unique SKU, positive price/stock, category/brand FKs, image mime/size |
-| Category | Title required, unique slug, image required on create |
+| Product | Unique SKU; `main_category_id` required; `sub_category_id` optional; resolved `category_id`; positive price/stock; image mime/size |
+| Main category | Title required, unique slug, image required on create, `parent_id` null |
+| Sub-category | Title required, `parent_id` required (main category FK), unique slug per scope |
 | Brand | Title, slug, optional logo |
 
 ---

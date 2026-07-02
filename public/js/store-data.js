@@ -13,10 +13,7 @@ window.EMPIRE_STORE = {
 
     banners: [],
     delivery: {
-        minimum: 2500,
         fee: 199,
-        categorySlugs: ['cases-covers', 'phone-cases', 'iphone-cases', 'mobile-cases'],
-        categoryPatterns: ['case', 'cover'],
     },
 };
 
@@ -34,4 +31,22 @@ window.EMPIRE_STORE.getProductsByCategory = function (slug) {
 
 window.EMPIRE_STORE.formatPrice = function (amount) {
     return 'Rs. ' + Number(amount ?? 0).toLocaleString('en-PK');
+};
+
+window.EMPIRE_STORE.goBack = function (fallbackUrl) {
+    const fallback = fallbackUrl || '/';
+
+    try {
+        const referrer = document.referrer;
+
+        if (referrer && new URL(referrer).origin === window.location.origin) {
+            window.history.back();
+
+            return;
+        }
+    } catch (error) {
+        // Ignore invalid referrer URLs and use fallback.
+    }
+
+    window.location.href = fallback;
 };

@@ -59,7 +59,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <ul class="flex items-center gap-1 py-0 overflow-x-auto scrollbar-hide">
                 <li>
-                    <a href="{{ route('store.collections.index') }}"
+                    <a href="{{ route('store.categories.index') }}"
                        class="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-navy-900 hover:bg-white hover:text-empire-600 transition border-b-2 border-transparent hover:border-empire-500 whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg>
                         All Accessories
@@ -67,7 +67,7 @@
                 </li>
                 @foreach(array_slice($storeCatalogCategories ?? [], 0, 8) as $nav)
                 <li>
-                    <a href="{{ route('store.collections.show', $nav['slug']) }}"
+                    <a href="{{ route('store.categories.show', $nav['slug']) }}"
                        class="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-navy-900 hover:bg-white transition whitespace-nowrap">
                         {{ $nav['name'] }}
                     </a>
@@ -95,12 +95,12 @@
             </div>
             <div class="p-4 space-y-1">
                 <a href="{{ url('/') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">Home</a>
-                <a href="{{ route('store.collections.index') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">Shop Collections</a>
+                <a href="{{ route('store.categories.index') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">Shop Categories</a>
                 <a href="{{ route('store.products.index') }}" class="block px-3 py-2.5 rounded-lg font-medium text-navy-900 hover:bg-gray-100">All Products</a>
                 <hr class="my-3 border-gray-200">
                 <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Categories</p>
                 @foreach($storeCatalogCategories ?? [] as $nav)
-                <a href="{{ route('store.collections.show', $nav['slug']) }}" class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">{{ $nav['name'] }}</a>
+                <a href="{{ route('store.categories.show', $nav['slug']) }}" class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">{{ $nav['name'] }}</a>
                 @endforeach
             </div>
         </div>

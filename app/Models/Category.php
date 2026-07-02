@@ -6,8 +6,10 @@ namespace App\Models;
 
 use App\Traits\HasPublicStorageImage;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -17,6 +19,7 @@ class Category extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'parent_id',
         'title',
         'slug',
         'description',
@@ -29,6 +32,7 @@ class Category extends Model
     {
         return [
             'is_active' => 'boolean',
+            'parent_id' => 'integer',
         ];
     }
 
@@ -70,8 +74,71 @@ class Category extends Model
         return $slug;
     }
 
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function isRoot(): bool
+    {
+        return $this->parent_id === null;
+    }
+
+    public function isSubcategory(): bool
+    {
+        return $this->parent_id !== null;
+    }
+
+    public function storeUrl(): string
+    {
+        if ($this->isSubcategory() && $this->parent) {
+            return route('store.categories.sub.show', [
+                'parentSlug' => $this->parent->slug,
+                'slug' => $this->slug,
+            ]);
+        }
+
+        return route('store.categories.show', $this->slug);
+    }
+
+    /**
+     * @return Collection<int, int>
+     */
+    public function descendantIds(): Collection
+    {
+        $ids = collect([$this->id]);
+
+        $this->loadMissing('children');
+
+        foreach ($this->children as $child) {
+            $ids = $ids->merge($child->descendantIds());
+        }
+
+        return $ids->unique()->values();
+    }
+
+    public function isDescendantOf(Category $category): bool
+    {
+        $parent = $this->parent;
+
+        while ($parent !== null) {
+            if ($parent->id === $category->id) {
+                return true;
+            }
+
+            $parent = $parent->parent;
+        }
+
+        return false;
     }
 }

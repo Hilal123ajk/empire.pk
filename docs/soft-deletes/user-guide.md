@@ -110,8 +110,11 @@ Always read the message before confirming.
 **I deleted a product by mistake.**  
 Open Products → filter **Trash** → **Restore**.
 
-**Can I trash a category that has products?**  
+**Can I trash a category that has products?**
 No. Move products to another category or trash products first.
+
+**Can I trash a main category that has sub-categories?**
+No. Remove or trash sub-categories first.
 
 **Does trash free up the SKU or slug?**  
 Trashed items still hold their SKU/slug internally. Permanent delete frees them for reuse.

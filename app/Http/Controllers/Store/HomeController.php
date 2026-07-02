@@ -28,14 +28,14 @@ class HomeController extends Controller
         ]);
     }
 
-    public function phoneAccessories(): View
+    public function categories(): View
     {
-        return view('phone-accessories', [
+        return view('categories.index', [
             'seo' => SeoMeta::forPage(
-                title: 'Phone Accessories',
-                description: 'Shop phone accessories at Empire.pk. Cases, screen protectors, chargers, AirPods, iPad & MacBook accessories with free delivery in Pakistan.',
-                canonical: route('store.collections.index'),
-                keywords: 'phone accessories, mobile cases, screen protectors, Pakistan',
+                title: 'Shop by Category',
+                description: 'Browse all categories at Empire.pk. Mobile accessories and more with cash on delivery in Pakistan.',
+                canonical: route('store.categories.index'),
+                keywords: 'categories, mobile accessories, shop, Empire.pk',
             ),
         ]);
     }
