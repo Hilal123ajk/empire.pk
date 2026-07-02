@@ -14,7 +14,7 @@ class UserSeeder extends Seeder
         User::query()->updateOrCreate(
             ['email' => 'hilaldev123@gmail.com'],
             [
-                'name' => 'CEO Admin',
+                'name' => 'Hilal Ahmad',
                 'password' => 'Ajk_573@ceoempirepk',
                 'role' => 'admin',
                 'email_verified_at' => now(),

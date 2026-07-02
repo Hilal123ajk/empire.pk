@@ -37,6 +37,7 @@
         'meta_keywords' => old('meta_keywords'),
         'is_active' => (bool) old('is_active'),
         'is_featured' => (bool) old('is_featured'),
+        'has_variants' => (bool) old('has_variants', true),
         'image' => null,
     ] : null;
 @endphp
@@ -46,6 +47,8 @@
     detailDrawerOpen: false,
     menuOpenId: null,
     colorLabelCount: 0,
+    newGalleryLabelCount: 0,
+    hasVariants: {{ old('_form') === 'create' ? (old('has_variants', true) ? 'true' : 'false') : 'true' }},
     editing: {{ $isEditing ? 'true' : 'false' }},
     editingId: {{ $isEditing ? (int) old('_product_id') : 'null' }},
     selectedProduct: @js($editProductFromOld),
@@ -62,6 +65,7 @@
         meta_keywords: '',
         is_active: true,
         is_featured: false,
+        has_variants: true,
     },
 
     resetEditForm(product = null) {
@@ -78,7 +82,9 @@
             meta_keywords: product?.meta_keywords ?? '',
             is_active: product?.is_active ?? true,
             is_featured: product?.is_featured ?? false,
+            has_variants: product?.has_variants ?? true,
         };
+        this.hasVariants = product?.has_variants ?? true;
     },
 
     openDrawer(flag) {
@@ -102,6 +108,8 @@
         this.editingId = null;
         this.selectedProduct = null;
         this.colorLabelCount = 0;
+        this.newGalleryLabelCount = 0;
+        this.hasVariants = true;
         this.detailDrawerOpen = false;
         this.menuOpenId = null;
         this.openDrawer('formDrawerOpen');
@@ -111,6 +119,7 @@
         this.editing = true;
         this.editingId = product.id;
         this.selectedProduct = product;
+        this.newGalleryLabelCount = 0;
         this.resetEditForm(product);
         this.detailDrawerOpen = false;
         this.menuOpenId = null;
@@ -204,6 +213,7 @@
                             'meta_keywords' => $product->meta_keywords,
                             'is_active' => $product->is_active,
                             'is_featured' => $product->is_featured,
+                            'has_variants' => $product->has_variants,
                             'image' => $product->image_public_url,
                             'gallery' => $product->images->map(fn ($img) => [
                                 'id' => $img->id,
@@ -402,20 +412,42 @@
                            class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:font-semibold file:text-navy-900 hover:file:bg-gray-200">
                     <p class="text-[11px] text-gray-400 mt-1">Main image for listings and product page. JPG, PNG, or WebP up to 5MB.</p>
                 </div>
+
+                <div class="p-4 rounded-xl border border-gray-200 bg-gray-50 space-y-3">
+                    <label class="flex items-start gap-3 text-sm cursor-pointer">
+                        <input type="hidden" name="has_variants" value="0">
+                        <input type="checkbox" name="has_variants" value="1" x-model="hasVariants"
+                               class="rounded accent-empire-500 mt-0.5" {{ old('_form') === 'create' ? (old('has_variants', true) ? 'checked' : '') : 'checked' }}>
+                        <span>
+                            <span class="font-semibold text-navy-900 block">This product has color/variant options</span>
+                            <span class="text-xs text-gray-500">Turn off for furniture and items with gallery-only photos (different angles, detail shots).</span>
+                        </span>
+                    </label>
+                </div>
+
                 <div>
-                    <label class="text-xs font-semibold text-gray-600 block mb-1">Color Images <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <label class="text-xs font-semibold text-gray-600 block mb-1">
+                        <span x-show="hasVariants">Color Images</span>
+                        <span x-show="!hasVariants">Gallery Images</span>
+                        <span class="text-gray-400 font-normal">(optional)</span>
+                    </label>
                     <input type="file" name="gallery_images[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple
                            @change="
                                const files = $event.target.files;
                                colorLabelCount = files ? files.length : 0;
                            "
                            class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:font-semibold file:text-navy-900 hover:file:bg-gray-200">
-                    <p class="text-[11px] text-gray-400 mt-1">Each image is a color option on the store. Add a color name for every image.</p>
+                    <p class="text-[11px] text-gray-400 mt-1" x-show="hasVariants">Each image is a color option on the store. Add a color name for every image.</p>
+                    <p class="text-[11px] text-gray-400 mt-1" x-show="!hasVariants">Add different angles or detail shots. Labels are optional (e.g. Front view, Side angle).</p>
                     <div class="mt-3 space-y-2" x-show="colorLabelCount > 0">
                         <template x-for="index in colorLabelCount" :key="'color-label-' + index">
                             <div>
-                                <label class="text-[11px] font-semibold text-gray-500 block mb-1" x-text="'Color name for image ' + index"></label>
-                                <input type="text" :name="'gallery_labels[' + (index - 1) + ']'" placeholder="e.g. Matte Black, Clear, Navy Blue"
+                                <label class="text-[11px] font-semibold text-gray-500 block mb-1">
+                                    <span x-show="hasVariants" x-text="'Color name for image ' + index"></span>
+                                    <span x-show="!hasVariants" x-text="'Caption for image ' + index + ' (optional)'"></span>
+                                </label>
+                                <input type="text" :name="'gallery_labels[' + (index - 1) + ']'" :required="hasVariants"
+                                       :placeholder="hasVariants ? 'e.g. Matte Black, Clear, Navy Blue' : 'e.g. Front view, Side angle, Detail'"
                                        class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">
                             </div>
                         </template>
@@ -530,15 +562,28 @@
                     <p class="text-[11px] text-gray-400 mt-1">Leave empty to keep the current hero image.</p>
                 </div>
 
+                <div class="p-4 rounded-xl border border-gray-200 bg-gray-50 space-y-3">
+                    <label class="flex items-start gap-3 text-sm cursor-pointer">
+                        <input type="hidden" name="has_variants" value="0">
+                        <input type="checkbox" name="has_variants" value="1" x-model="editForm.has_variants"
+                               @change="hasVariants = editForm.has_variants"
+                               class="rounded accent-empire-500 mt-0.5">
+                        <span>
+                            <span class="font-semibold text-navy-900 block">This product has color/variant options</span>
+                            <span class="text-xs text-gray-500">Turn off for gallery-only products (furniture, etc.).</span>
+                        </span>
+                    </label>
+                </div>
+
                 <template x-if="selectedProduct?.gallery?.length">
                     <div class="space-y-3">
-                        <p class="text-xs font-bold text-navy-900 uppercase tracking-wide">Color Images</p>
+                        <p class="text-xs font-bold text-navy-900 uppercase tracking-wide" x-text="editForm.has_variants ? 'Color Images' : 'Gallery Images'"></p>
                         <template x-for="item in selectedProduct.gallery" :key="item.id">
                             <div class="flex gap-3 items-start p-3 border border-gray-200 rounded-xl bg-gray-50">
-                                <img :src="item.url" :alt="item.label || 'Color'" class="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-200">
+                                <img :src="item.url" :alt="item.label || 'Image'" class="w-16 h-16 rounded-lg object-cover shrink-0 border border-gray-200">
                                 <div class="flex-1 min-w-0 space-y-2">
                                     <input type="text" :name="'gallery_labels[' + item.id + ']'" :value="item.label || ''"
-                                           placeholder="Color name e.g. Matte Black, Clear"
+                                           :placeholder="editForm.has_variants ? 'Color name e.g. Matte Black' : 'Caption e.g. Front view (optional)'"
                                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-empire-500">
                                     <label class="flex items-center gap-2 text-xs text-red-600">
                                         <input type="checkbox" name="remove_gallery_ids[]" :value="item.id" class="rounded accent-red-500">
@@ -551,10 +596,28 @@
                 </template>
 
                 <div>
-                    <label class="text-xs font-semibold text-gray-600 block mb-1">Add Color Images</label>
+                    <label class="text-xs font-semibold text-gray-600 block mb-1">
+                        <span x-show="editForm.has_variants">Add Color Images</span>
+                        <span x-show="!editForm.has_variants">Add Gallery Images</span>
+                    </label>
                     <input type="file" name="gallery_images[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple
+                           @change="newGalleryLabelCount = $event.target.files ? $event.target.files.length : 0"
                            class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:font-semibold file:text-navy-900 hover:file:bg-gray-200">
-                    <p class="text-[11px] text-gray-400 mt-1">Upload one image per color. Set the color name above for existing images.</p>
+                    <p class="text-[11px] text-gray-400 mt-1" x-show="editForm.has_variants">Upload one image per color. Set the color name above for existing images.</p>
+                    <p class="text-[11px] text-gray-400 mt-1" x-show="!editForm.has_variants">Upload angle or detail shots. Captions are optional.</p>
+                    <div class="mt-3 space-y-2" x-show="newGalleryLabelCount > 0">
+                        <template x-for="index in newGalleryLabelCount" :key="'new-gallery-label-' + index">
+                            <div>
+                                <label class="text-[11px] font-semibold text-gray-500 block mb-1">
+                                    <span x-show="editForm.has_variants" x-text="'Color name for new image ' + index"></span>
+                                    <span x-show="!editForm.has_variants" x-text="'Caption for new image ' + index + ' (optional)'"></span>
+                                </label>
+                                <input type="text" :name="'gallery_labels[' + (index - 1) + ']'" :required="editForm.has_variants"
+                                       :placeholder="editForm.has_variants ? 'e.g. Matte Black' : 'e.g. Side angle'"
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-empire-500">
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 <div class="pt-2 border-t border-gray-100">
@@ -607,12 +670,12 @@
                     </template>
                     <template x-if="selectedProduct.gallery?.length">
                         <div>
-                            <p class="text-xs font-semibold text-gray-500 mb-2">Color options</p>
+                            <p class="text-xs font-semibold text-gray-500 mb-2" x-text="selectedProduct.has_variants ? 'Color options' : 'Gallery'"></p>
                             <div class="flex flex-wrap gap-2">
                                 <template x-for="item in selectedProduct.gallery" :key="item.id">
                                     <div class="text-center">
-                                        <img :src="item.url" :alt="item.label || 'Color'" class="w-14 h-14 rounded-lg object-cover border border-gray-200">
-                                        <p class="text-[10px] text-gray-500 mt-1 max-w-[56px] truncate" x-text="item.label || 'Color'"></p>
+                                        <img :src="item.url" :alt="item.label || 'Image'" class="w-14 h-14 rounded-lg object-cover border border-gray-200">
+                                        <p class="text-[10px] text-gray-500 mt-1 max-w-[56px] truncate" x-text="item.label || (selectedProduct.has_variants ? 'Color' : 'View')"></p>
                                     </div>
                                 </template>
                             </div>

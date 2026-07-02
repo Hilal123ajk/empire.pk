@@ -30,6 +30,7 @@ class Product extends Model
         'meta_keywords',
         'is_active',
         'is_featured',
+        'has_variants',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class Product extends Model
             'stock_quantity' => 'integer',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'has_variants' => 'boolean',
         ];
     }
 

@@ -1,11 +1,8 @@
 <aside :class="$store.adminUi.sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
        class="fixed top-0 left-0 z-50 w-64 h-full bg-white border-r border-gray-200 flex flex-col shadow-sm transition-transform duration-300 lg:translate-x-0">
     <div class="flex items-center gap-3 px-5 py-5 border-b border-gray-200">
-        <div class="w-10 h-10 bg-navy-900 rounded-xl flex items-center justify-center shrink-0">
-            <span class="text-empire-400 font-extrabold text-lg">E</span>
-        </div>
+        <x-admin-logo size="sm" />
         <div>
-            <p class="font-extrabold text-navy-900 text-sm">Empire<span class="text-empire-500">.pk</span></p>
             <p class="text-[10px] text-gray-500 uppercase tracking-wider">Admin Panel</p>
         </div>
     </div>

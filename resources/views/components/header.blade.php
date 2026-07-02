@@ -1,21 +1,17 @@
 {{-- Main header --}}
 <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm" x-data="{ mobileMenu: false, mobileSearch: false }">
     <div class="max-w-7xl mx-auto px-4">
-        <div class="flex items-center gap-3 py-3 md:py-4">
+        <div class="flex items-center gap-2 sm:gap-3 h-14">
             {{-- Left: menu + logo --}}
-            <div class="flex items-center gap-0.5 sm:gap-2 shrink-0 min-w-0">
+            <div class="flex items-center gap-0.5 sm:gap-2 shrink-0 min-w-0 h-full">
                 <button @click="mobileMenu = !mobileMenu" class="lg:hidden p-2 -ml-2 text-gray-600 hover:text-navy-900" aria-label="Menu">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
 
-                <a href="{{ url('/') }}" class="flex items-center gap-2 shrink-0">
-                    <div class="w-10 h-10 bg-navy-900 rounded-xl flex items-center justify-center">
-                        <span class="text-empire-400 font-extrabold text-lg">E</span>
-                    </div>
-                    <div class="hidden sm:block">
-                        <span class="text-xl font-extrabold text-navy-900 tracking-tight">Empire<span class="text-empire-500">.pk</span></span>
-                        <p class="text-[10px] text-gray-500 -mt-0.5 tracking-wide uppercase">Mobile Accessories</p>
-                    </div>
+                <a href="{{ url('/') }}" class="inline-flex items-center h-full shrink-0 font-logo font-medium leading-none tracking-[-0.06em] sm:tracking-[-0.07em] text-[1.65rem] sm:text-[1.85rem] md:text-[2rem] select-none" aria-label="Empire.pk Home">
+                    <span class="text-brand-navy">empire</span>
+                    <span class="text-brand-gold text-[1em] leading-none mt-4">•</span>
+                    <span class="text-brand-gold">pk</span>
                 </a>
             </div>
 

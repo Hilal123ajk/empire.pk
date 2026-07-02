@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -48,6 +49,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+        Route::get('/login/verify', [AuthController::class, 'showVerifyOtp'])->name('login.verify');
+        Route::post('/login/verify', [AuthController::class, 'verifyOtp'])->name('login.verify.submit');
+        Route::post('/login/verify/resend', [AuthController::class, 'resendOtp'])->name('login.verify.resend');
     });
 
     Route::middleware('admin')->group(function () {
@@ -75,6 +79,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/orders', [OrderController::class, 'index'])->name('orders');
         Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
-        Route::get('/customers', fn () => view('admin.customers.index'))->name('customers');
+        Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
     });
 });

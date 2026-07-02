@@ -53,6 +53,22 @@ class StoreCatalogService
             ->all();
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getNewArrivals(int $limit = 5): array
+    {
+        $products = Product::query()
+            ->where('is_active', true)
+            ->where('created_at', '>=', now()->subMonth())
+            ->with(['category:id,slug,title', 'brand:id,title,slug', 'images'])
+            ->get()
+            ->shuffle()
+            ->take($limit);
+
+        return $this->transformProducts($products);
+    }
+
     public function getShuffledProductsPaginated(int $perPage = 12): LengthAwarePaginator
     {
         $page = max(1, (int) request()->query('page', 1));
@@ -160,15 +176,18 @@ class StoreCatalogService
                 ])
                 ->values()
                 ->all(),
-            'colors' => $product->images
-                ->map(fn ($image) => [
-                    'id' => $image->id,
-                    'url' => $image->image_public_url,
-                    'label' => $image->label ?: 'Color',
-                ])
-                ->values()
-                ->all(),
-            'hasColors' => $product->images->isNotEmpty(),
+            'colors' => $product->has_variants
+                ? $product->images
+                    ->map(fn ($image) => [
+                        'id' => $image->id,
+                        'url' => $image->image_public_url,
+                        'label' => $image->label ?: 'Color',
+                    ])
+                    ->values()
+                    ->all()
+                : [],
+            'hasVariants' => $product->has_variants,
+            'hasColors' => $product->has_variants && $product->images->isNotEmpty(),
             'description' => $product->description,
             'featured' => $product->is_featured,
             'inStock' => $product->stock_quantity > 0,

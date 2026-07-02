@@ -2,7 +2,7 @@
 
 @section('title', 'Customers')
 @section('page_title', 'Customers')
-@section('page_subtitle', 'View registered customers and their activity')
+@section('page_subtitle', 'Customers from checkout orders — grouped by phone number')
 
 @section('content')
 <div x-data="{ search: '' }">
@@ -25,7 +25,12 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <template x-for="customer in EMPIRE_ADMIN.customers.filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search))" :key="customer.id">
+                    <template x-if="EMPIRE_ADMIN.customers.length === 0">
+                        <tr>
+                            <td colspan="6" class="px-5 py-10 text-center text-gray-500">No customers yet. They will appear here after the first checkout.</td>
+                        </tr>
+                    </template>
+                    <template x-for="customer in EMPIRE_ADMIN.customers.filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()) || (c.email !== '—' && c.email.toLowerCase().includes(search.toLowerCase())) || c.phone.includes(search))" :key="customer.id">
                         <tr class="hover:bg-gray-50">
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-3">
@@ -49,3 +54,9 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    window.EMPIRE_ADMIN.customers = @json($adminCustomers);
+</script>
+@endpush

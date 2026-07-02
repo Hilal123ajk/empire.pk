@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Store;
 
+use App\Models\ProductImage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -52,7 +53,13 @@ class StoreCheckoutRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000', 'regex:/^[\p{L}\p{N}\s,\-.\/#!?]*$/u'],
             'payment' => ['required', 'in:cod'],
             'items' => ['required', 'array', 'min:1', 'max:50'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.product_id' => [
+                'required',
+                'integer',
+                Rule::exists('products', 'id')->where(function ($query): void {
+                    $query->where('is_active', true)->whereNull('deleted_at');
+                }),
+            ],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
             'items.*.variant_image_id' => ['nullable', 'integer', 'exists:product_images,id'],
         ];
@@ -69,6 +76,56 @@ class StoreCheckoutRequest extends FormRequest
                     'address',
                     'Please enter a complete address with at least 4 words (e.g. Chak 12, Tehsil Kasur, District Kasur, Lahore).'
                 );
+            }
+
+            $items = $this->input('items', []);
+
+            if (! is_array($items)) {
+                return;
+            }
+
+            $lineKeys = [];
+
+            foreach ($items as $index => $item) {
+                if (! is_array($item)) {
+                    $validator->errors()->add('items', 'Invalid cart item payload.');
+
+                    return;
+                }
+
+                if (array_key_exists('price', $item) || array_key_exists('unit_price', $item) || array_key_exists('total', $item)) {
+                    $validator->errors()->add('items', 'Cart prices are calculated on the server.');
+
+                    return;
+                }
+
+                $productId = $item['product_id'] ?? null;
+                $variantImageId = $item['variant_image_id'] ?? null;
+                $lineKey = $productId.':'.($variantImageId ?? 'default');
+
+                if (in_array($lineKey, $lineKeys, true)) {
+                    $validator->errors()->add('items', 'Duplicate cart lines are not allowed.');
+
+                    return;
+                }
+
+                $lineKeys[] = $lineKey;
+
+                if ($variantImageId === null) {
+                    continue;
+                }
+
+                $ownsVariant = ProductImage::query()
+                    ->where('id', $variantImageId)
+                    ->where('product_id', $productId)
+                    ->exists();
+
+                if (! $ownsVariant) {
+                    $validator->errors()->add(
+                        "items.{$index}.variant_image_id",
+                        'The selected product variant is invalid.'
+                    );
+                }
             }
         });
     }

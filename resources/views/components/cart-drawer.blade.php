@@ -52,7 +52,7 @@
 
         {{-- Cart items --}}
         <div x-show="$store.cart.items.length > 0" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-            <template x-for="item in $store.cart.items" :key="item.lineKey">
+            <template x-for="item in $store.cart.displayItems" :key="item.lineKey">
                 <div class="flex gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                     <a :href="'/products/' + item.slug" @click="$store.cart.closeDrawer()" class="w-16 h-16 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
                         <img :src="item.image" :alt="item.name" class="w-full h-full object-cover">

@@ -6,32 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') — Empire.pk</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-                    colors: {
-                        empire: { 50: '#fffbeb', 100: '#fef3c7', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309' },
-                        navy: { 800: '#1e293b', 900: '#0f172a', 950: '#020617' },
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        [x-cloak] { display: none !important; }
-        .sidebar-link.active {
-            background: #fffbeb;
-            color: #b45309;
-            border-right: 3px solid #f59e0b;
-            font-weight: 600;
-        }
-    </style>
     @stack('head')
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans antialiased" x-data x-cloak>
@@ -84,7 +60,7 @@
     <script src="{{ asset('js/store-data.js') }}"></script>
     <script src="{{ asset('js/admin-data.js') }}"></script>
     <script src="{{ asset('js/admin-app.js') }}"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

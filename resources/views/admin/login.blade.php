@@ -6,12 +6,17 @@
 <div class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <div class="w-14 h-14 bg-navy-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span class="text-empire-400 font-extrabold text-2xl">E</span>
-            </div>
-            <h1 class="text-2xl font-extrabold text-navy-900">Empire.pk Admin</h1>
-            <p class="text-gray-500 text-sm mt-1">Sign in to manage your store</p>
+            <a href="{{ route('admin.login') }}" class="inline-flex justify-center">
+                <x-admin-logo size="lg" />
+            </a>
+            <p class="text-gray-500 text-sm mt-3">Sign in to manage your store</p>
         </div>
+
+        @if (session('status'))
+        <div class="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+            {{ session('status') }}
+        </div>
+        @endif
 
         <form method="POST" action="{{ route('admin.login.submit') }}" class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-200 space-y-5">
             @csrf
@@ -38,7 +43,7 @@
                 Remember me
             </label>
 
-            <button type="submit" class="w-full py-3 bg-navy-900 hover:bg-navy-800 text-white font-bold rounded-xl transition">
+            <button type="submit" class="w-full py-3 bg-navy-900 hover:bg-navy-800 text-white font-bold rounded-xl transition hover:cursor-pointer">
                 Sign In
             </button>
         </form>

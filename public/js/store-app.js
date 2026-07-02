@@ -1,30 +1,145 @@
 document.addEventListener('alpine:init', () => {
     Alpine.store('cart', {
-        items: JSON.parse(localStorage.getItem('empire_cart') || '[]').map((item) => ({
-            ...item,
-            lineKey: item.lineKey ?? `${item.id}-${item.variantImageId ?? 'default'}`,
-        })),
+        items: [],
         drawerOpen: false,
+
+        init() {
+            this.items = this.loadItems();
+            this.syncFromCatalog();
+        },
+
+        loadItems() {
+            try {
+                return JSON.parse(localStorage.getItem('empire_cart') || '[]')
+                    .filter((item) => item && typeof item.id === 'number')
+                    .map((item) => ({
+                        lineKey: item.lineKey ?? `${item.id}-${item.variantImageId ?? 'default'}`,
+                        id: item.id,
+                        quantity: Math.min(99, Math.max(1, parseInt(item.quantity, 10) || 1)),
+                        variantImageId: item.variantImageId ?? null,
+                        variantLabel: item.variantLabel ?? null,
+                    }));
+            } catch {
+                return [];
+            }
+        },
+
+        catalogProduct(item) {
+            return window.EMPIRE_STORE?.products?.find((entry) => entry.id === item.id) ?? null;
+        },
+
+        unitPrice(item) {
+            const product = this.catalogProduct(item);
+
+            return product ? Number(product.price) : 0;
+        },
+
+        displayItem(item) {
+            const product = this.catalogProduct(item);
+
+            if (!product) {
+                return null;
+            }
+
+            const variant = item.variantImageId
+                ? (product.gallery || []).find((entry) => entry.id === item.variantImageId)
+                : null;
+
+            return {
+                ...item,
+                slug: product.slug,
+                name: product.name,
+                brand: product.brand,
+                category: product.category ?? '',
+                price: Number(product.price),
+                image: variant?.url ?? product.image,
+                variantLabel: variant?.label ?? item.variantLabel ?? 'Main',
+                inStock: product.inStock,
+            };
+        },
+
+        get displayItems() {
+            return this.items
+                .map((item) => this.displayItem(item))
+                .filter(Boolean);
+        },
 
         get count() {
             return this.items.reduce((sum, item) => sum + item.quantity, 0);
         },
 
         get total() {
-            return this.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            return this.items.reduce((sum, item) => sum + this.unitPrice(item) * item.quantity, 0);
         },
 
         get deliveryFee() {
             if (this.total === 0) return 0;
-            return this.total >= 2500 ? 0 : 199;
+
+            const config = window.EMPIRE_STORE.delivery || {};
+            const minimum = Number(config.minimum ?? 2500);
+            const fee = Number(config.fee ?? 199);
+            const slugs = config.categorySlugs || [];
+            const patterns = config.categoryPatterns || [];
+
+            const eligibleSubtotal = this.items.reduce((sum, item) => {
+                const product = this.catalogProduct(item);
+                const category = String(product?.category || '').toLowerCase();
+                if (!category) return sum;
+
+                const slugMatch = slugs.includes(category);
+                const patternMatch = patterns.some((pattern) => category.includes(String(pattern).toLowerCase()));
+
+                if (slugMatch || patternMatch) {
+                    return sum + this.unitPrice(item) * item.quantity;
+                }
+
+                return sum;
+            }, 0);
+
+            return eligibleSubtotal >= minimum ? 0 : fee;
         },
 
         get grandTotal() {
             return this.total + this.deliveryFee;
         },
 
+        syncFromCatalog() {
+            if (!window.EMPIRE_STORE?.products?.length) {
+                return;
+            }
+
+            const synced = [];
+
+            for (const item of this.items) {
+                const product = this.catalogProduct(item);
+
+                if (!product || !product.inStock) {
+                    continue;
+                }
+
+                synced.push({
+                    lineKey: item.lineKey,
+                    id: item.id,
+                    quantity: Math.min(99, Math.max(1, parseInt(item.quantity, 10) || 1)),
+                    variantImageId: item.variantImageId ?? null,
+                    variantLabel: item.variantLabel ?? null,
+                });
+            }
+
+            this.items = synced;
+            this.save();
+        },
+
         save() {
-            localStorage.setItem('empire_cart', JSON.stringify(this.items));
+            localStorage.setItem('empire_cart', JSON.stringify(
+                this.items.map(({ lineKey, id, quantity, variantImageId, variantLabel }) => ({
+                    lineKey,
+                    id,
+                    quantity,
+                    variantImageId,
+                    variantLabel,
+                })),
+            ));
         },
 
         openDrawer() {
@@ -55,19 +170,14 @@ document.addEventListener('alpine:init', () => {
             const existing = this.items.find((item) => item.lineKey === lineKey);
 
             if (existing) {
-                existing.quantity += quantity;
+                existing.quantity = Math.min(99, existing.quantity + quantity);
             } else {
                 this.items.push({
                     lineKey,
                     id: product.id,
-                    slug: product.slug,
-                    name: product.name,
-                    brand: product.brand,
-                    price: product.price,
-                    image,
+                    quantity: Math.min(99, Math.max(1, quantity)),
                     variantImageId,
                     variantLabel,
-                    quantity,
                 });
             }
 
@@ -89,7 +199,7 @@ document.addEventListener('alpine:init', () => {
             if (quantity <= 0) {
                 this.remove(lineKey);
             } else {
-                item.quantity = quantity;
+                item.quantity = Math.min(99, Math.max(1, parseInt(quantity, 10) || 1));
                 this.save();
             }
         },
@@ -311,8 +421,8 @@ document.addEventListener('alpine:init', () => {
                         payment: this.payment,
                         items: this.$store.cart.items.map((item) => ({
                             product_id: item.id,
-                            quantity: item.quantity,
-                            variant_image_id: item.variantImageId,
+                            quantity: Math.min(99, Math.max(1, parseInt(item.quantity, 10) || 1)),
+                            variant_image_id: item.variantImageId ?? null,
                         })),
                     }),
                 });

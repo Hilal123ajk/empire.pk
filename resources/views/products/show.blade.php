@@ -11,20 +11,48 @@
     selectedImageKey: 'main',
     get thumbnails() {
         const items = [{ key: 'main', url: this.product.image, label: 'Main' }];
-        (this.product.colors || []).forEach((color) => {
-            items.push({ key: String(color.id), url: color.url, label: color.label, id: color.id });
-        });
+
+        if (this.product.hasVariants) {
+            (this.product.colors || []).forEach((color) => {
+                items.push({ key: String(color.id), url: color.url, label: color.label, id: color.id });
+            });
+        } else {
+            (this.product.gallery || []).forEach((image) => {
+                items.push({
+                    key: String(image.id),
+                    url: image.url,
+                    label: image.label || 'View',
+                    id: null,
+                });
+            });
+        }
+
         return items;
     },
     get displayImage() {
         const thumb = this.thumbnails.find((item) => item.key === this.selectedImageKey);
         return thumb?.url || this.product.image;
     },
+    get displayCaption() {
+        if (this.selectedImageKey === 'main') {
+            return null;
+        }
+
+        const thumb = this.thumbnails.find((item) => item.key === this.selectedImageKey);
+        return thumb?.label && thumb.label !== 'View' ? thumb.label : null;
+    },
     get selectedColor() {
-        if (this.selectedImageKey === 'main') return null;
+        if (!this.product.hasVariants || this.selectedImageKey === 'main') {
+            return null;
+        }
+
         return (this.product.colors || []).find((color) => String(color.id) === this.selectedImageKey) ?? null;
     },
     get selectedVariant() {
+        if (!this.product.hasVariants) {
+            return { id: null, url: this.product.image, label: 'Main' };
+        }
+
         if (this.selectedColor) {
             return this.selectedColor;
         }
@@ -56,18 +84,19 @@
     <div class="max-w-7xl mx-auto px-4 py-4 md:py-5 lg:py-6">
         <div class="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-10 md:items-start">
             {{-- Images --}}
-            <div class="w-full md:w-4/5">
-                <div class="aspect-square w-full rounded-2xl overflow-hidden bg-white border border-gray-200 mb-3">
-                    <img :src="displayImage" :alt="product.name" class="w-full h-full object-cover">
+            <div class="w-full">
+                <div class="aspect-square w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-200 mb-3 flex items-center justify-center">
+                    <img :src="displayImage" :alt="product.name" class="w-full h-full object-contain">
                 </div>
+                <p class="text-xs text-gray-500 mb-2 min-h-[1rem]" x-show="!product.hasVariants && displayCaption" x-text="displayCaption"></p>
                 <div class="flex gap-2 flex-wrap" x-show="thumbnails.length > 1">
                     <template x-for="thumb in thumbnails" :key="thumb.key">
                         <button type="button"
                                 @click="selectThumbnail(thumb.key)"
                                 :title="thumb.label"
                                 :class="selectedImageKey === thumb.key ? 'ring-2 ring-empire-500' : 'ring-1 ring-gray-200'"
-                                class="w-16 h-16 md:w-[4.5rem] md:h-[4.5rem] rounded-xl overflow-hidden shrink-0 transition">
-                            <img :src="thumb.url" :alt="thumb.label" class="w-full h-full object-cover">
+                                class="w-[4.25rem] h-[4.25rem] md:w-20 md:h-20 rounded-xl overflow-hidden shrink-0 transition bg-gray-50 flex items-center justify-center">
+                            <img :src="thumb.url" :alt="thumb.label" class="max-w-full max-h-full w-full h-full object-contain">
                         </button>
                     </template>
                 </div>
@@ -88,14 +117,14 @@
                     <span x-text="product.inStock ? 'In Stock — Ready to Ship' : 'Out of Stock'"></span>
                 </p>
 
-                <div class="mt-3 md:mt-2" x-show="product.hasColors">
+                <div class="mt-3 md:mt-2" x-show="product.hasVariants && product.hasColors">
                     <p class="text-xs md:text-sm font-semibold text-navy-900">
                         Color:
                         <span class="font-normal text-gray-600" x-text="selectedVariant.label"></span>
                     </p>
                 </div>
 
-                <p class="mt-3 md:mt-2 text-xs md:text-sm text-gray-600 leading-relaxed line-clamp-3 md:line-clamp-4" x-text="product.description || 'Premium quality mobile accessory from Empire.pk. Genuine product with warranty. Free delivery on orders above Rs. 2,500 in major cities.'"></p>
+                <p class="mt-3 md:mt-2 text-xs md:text-sm text-gray-600 leading-relaxed line-clamp-3 md:line-clamp-4" x-text="product.description || 'Premium quality mobile accessory from Empire.pk. Genuine product with warranty. Free delivery on cases & covers above Rs. 2,500.'"></p>
 
                 {{-- Quantity & Add to cart --}}
                 <div class="mt-4 md:mt-3 flex flex-col sm:flex-row gap-2.5">
@@ -120,7 +149,7 @@
                 {{-- Trust info --}}
                 <div class="mt-4 md:mt-5 grid grid-cols-2 gap-2 md:gap-2.5">
                     @foreach([
-                        ['title' => 'Free Delivery', 'sub' => 'Orders above Rs. 2,500'],
+                        ['title' => 'Free Delivery', 'sub' => 'Cases & covers above Rs. 2,500'],
                         ['title' => 'Cash on Delivery', 'sub' => 'Pay when you receive'],
                         ['title' => '7-Day Returns', 'sub' => 'Easy exchange policy'],
                         ['title' => '100% Genuine', 'sub' => 'Authentic products only'],

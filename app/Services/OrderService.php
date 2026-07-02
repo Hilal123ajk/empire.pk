@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Support\DeliveryPolicy;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
@@ -19,14 +20,27 @@ class OrderService
         return DB::transaction(function () use ($data): Order {
             $subtotal = 0.0;
             $lineItems = [];
+            $deliveryItems = [];
 
             foreach ($data['items'] as $item) {
                 $product = Product::query()
+                    ->with('category:id,slug')
                     ->where('id', $item['product_id'])
                     ->where('is_active', true)
-                    ->firstOrFail();
+                    ->lockForUpdate()
+                    ->first();
 
-                if ($product->stock_quantity < $item['quantity']) {
+                if ($product === null) {
+                    throw new \InvalidArgumentException('One or more products in your cart are no longer available.');
+                }
+
+                $quantity = (int) $item['quantity'];
+
+                if ($quantity < 1 || $quantity > 99) {
+                    throw new \InvalidArgumentException('Invalid quantity for '.$product->name.'.');
+                }
+
+                if ($product->stock_quantity < $quantity) {
                     throw new \InvalidArgumentException("Insufficient stock for {$product->name}.");
                 }
 
@@ -49,9 +63,14 @@ class OrderService
                 }
 
                 $unitPrice = (float) $product->price;
-                $quantity = (int) $item['quantity'];
-                $lineTotal = $unitPrice * $quantity;
+                $lineTotal = round($unitPrice * $quantity, 2);
                 $subtotal += $lineTotal;
+
+                $deliveryItems[] = [
+                    'price' => $unitPrice,
+                    'quantity' => $quantity,
+                    'category' => $product->category?->slug,
+                ];
 
                 $lineItems[] = [
                     'product_id' => $product->id,
@@ -68,7 +87,9 @@ class OrderService
                 ];
             }
 
-            $deliveryFee = $subtotal >= 2500 ? 0.0 : ($subtotal > 0 ? 199.0 : 0.0);
+            $deliveryFee = DeliveryPolicy::calculateFee($deliveryItems);
+            $subtotal = round($subtotal, 2);
+            $totalAmount = round($subtotal + $deliveryFee, 2);
 
             $order = Order::query()->create([
                 'order_number' => $this->generateOrderNumber(),
@@ -84,7 +105,7 @@ class OrderService
                 'payment_status' => 'pending',
                 'subtotal' => $subtotal,
                 'delivery_fee' => $deliveryFee,
-                'total_amount' => $subtotal + $deliveryFee,
+                'total_amount' => $totalAmount,
             ]);
 
             foreach ($lineItems as $lineItem) {

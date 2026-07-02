@@ -7,49 +7,38 @@
 @section('content')
 <div x-data="{}">
     {{-- Stats widgets --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
         <div class="bg-white rounded-2xl border border-gray-200 p-4 md:p-5">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Orders Today</span>
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Orders</span>
                 <div class="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                 </div>
             </div>
-            <p class="text-2xl md:text-3xl font-extrabold text-navy-900" x-text="EMPIRE_ADMIN.stats.ordersToday"></p>
-            <p class="text-xs text-gray-500 mt-1"><span x-text="EMPIRE_ADMIN.stats.ordersWeek"></span> this week · <span x-text="EMPIRE_ADMIN.stats.ordersMonth"></span> this month</p>
+            <p class="text-2xl md:text-3xl font-extrabold text-navy-900" x-text="EMPIRE_ADMIN.stats.totalOrders"></p>
+            <p class="text-xs text-gray-500 mt-1"><span x-text="EMPIRE_ADMIN.stats.pendingOrders"></span> pending · <span x-text="EMPIRE_ADMIN.stats.deliveredOrders"></span> delivered</p>
         </div>
 
         <div class="bg-white rounded-2xl border border-gray-200 p-4 md:p-5">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Revenue Today</span>
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Customers</span>
+                <div class="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+            </div>
+            <p class="text-2xl md:text-3xl font-extrabold text-navy-900" x-text="EMPIRE_ADMIN.stats.totalCustomers"></p>
+            <p class="text-xs text-gray-500 mt-1">Unique checkout customers</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 md:p-5">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Completed Revenue</span>
                 <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
             </div>
-            <p class="text-2xl md:text-3xl font-extrabold text-navy-900" x-text="EMPIRE_ADMIN.formatPrice(EMPIRE_ADMIN.stats.revenueToday)"></p>
-            <p class="text-xs text-emerald-600 mt-1 font-medium">+<span x-text="EMPIRE_ADMIN.stats.revenueChange"></span>% vs last week</p>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-gray-200 p-4 md:p-5">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">New Customers</span>
-                <div class="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                </div>
-            </div>
-            <p class="text-2xl md:text-3xl font-extrabold text-navy-900" x-text="EMPIRE_ADMIN.stats.newCustomers"></p>
-            <p class="text-xs text-emerald-600 mt-1 font-medium">+<span x-text="EMPIRE_ADMIN.stats.customersChange"></span>% this month</p>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-gray-200 p-4 md:p-5">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Low Stock</span>
-                <div class="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                </div>
-            </div>
-            <p class="text-2xl md:text-3xl font-extrabold text-red-600" x-text="EMPIRE_ADMIN.stats.lowStockCount"></p>
-            <p class="text-xs text-gray-500 mt-1">Products need restocking</p>
+            <p class="text-2xl md:text-3xl font-extrabold text-navy-900" x-text="EMPIRE_ADMIN.formatPrice(EMPIRE_ADMIN.stats.completedRevenue)"></p>
+            <p class="text-xs text-gray-500 mt-1"><span x-text="EMPIRE_ADMIN.stats.completedOrderCount"></span> delivered orders</p>
         </div>
     </div>
 
@@ -91,6 +80,11 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
+                        <template x-if="EMPIRE_ADMIN.orders.length === 0">
+                            <tr>
+                                <td colspan="4" class="px-5 py-8 text-center text-gray-500">No orders yet. Checkouts will appear here.</td>
+                            </tr>
+                        </template>
                         <template x-for="order in EMPIRE_ADMIN.orders.slice(0, 5)" :key="order.id">
                             <tr class="hover:bg-gray-50">
                                 <td class="px-5 py-3">
@@ -113,20 +107,33 @@
 
         {{-- Sidebar widgets --}}
         <div class="space-y-6">
-            {{-- Low stock --}}
+            {{-- Activity log --}}
             <div class="bg-white rounded-2xl border border-gray-200 p-5">
                 <h2 class="font-bold text-navy-900 mb-4 flex items-center gap-2">
-                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-                    Low Stock Alerts
+                    <span class="w-2 h-2 bg-empire-500 rounded-full"></span>
+                    Activity Log
                 </h2>
-                <div class="space-y-3">
-                    <template x-for="item in EMPIRE_ADMIN.lowStock" :key="item.sku">
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="min-w-0 pr-2">
-                                <p class="font-medium text-navy-900 truncate" x-text="item.name"></p>
-                                <p class="text-xs text-gray-400" x-text="item.sku"></p>
+                <div class="space-y-3 max-h-[22rem] overflow-y-auto pr-1">
+                    <template x-if="EMPIRE_ADMIN.activity.length === 0">
+                        <p class="text-sm text-gray-500">No admin activity recorded yet.</p>
+                    </template>
+                    <template x-for="entry in EMPIRE_ADMIN.activity" :key="entry.id">
+                        <div class="flex gap-3 text-sm border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+                            <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center"
+                                 :class="{
+                                    'bg-blue-100 text-blue-600': entry.subject_type === 'order',
+                                    'bg-empire-100 text-empire-700': entry.subject_type === 'product',
+                                    'bg-indigo-100 text-indigo-600': entry.subject_type === 'category',
+                                    'bg-gray-100 text-gray-600': entry.subject_type === 'brand',
+                                 }">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
-                            <span class="shrink-0 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full" x-text="item.stock + ' left'"></span>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-navy-900 leading-snug" x-text="entry.description"></p>
+                                <p class="text-[11px] text-gray-400 mt-1">
+                                    <span x-text="entry.user"></span> · <span x-text="entry.created_at_human"></span>
+                                </p>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -136,6 +143,9 @@
             <div class="bg-white rounded-2xl border border-gray-200 p-5">
                 <h2 class="font-bold text-navy-900 mb-4">Bestsellers</h2>
                 <div class="space-y-3">
+                    <template x-if="EMPIRE_ADMIN.bestsellers.length === 0">
+                        <p class="text-sm text-gray-500">No sales data yet.</p>
+                    </template>
                     <template x-for="(item, i) in EMPIRE_ADMIN.bestsellers" :key="i">
                         <div class="flex items-start gap-3 text-sm">
                             <span class="w-6 h-6 bg-empire-100 text-empire-700 rounded-lg flex items-center justify-center text-xs font-bold shrink-0" x-text="i + 1"></span>
@@ -151,3 +161,12 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    window.EMPIRE_ADMIN.stats = @json($dashboardStats);
+    window.EMPIRE_ADMIN.orders = @json($dashboardRecentOrders);
+    window.EMPIRE_ADMIN.bestsellers = @json($dashboardBestsellers);
+    window.EMPIRE_ADMIN.activity = @json($dashboardActivity);
+</script>
+@endpush

@@ -117,7 +117,7 @@
                     <h2 class="text-lg font-bold text-navy-900 mb-4">Order Summary</h2>
 
                     <div class="space-y-3 max-h-64 overflow-y-auto mb-4">
-                        <template x-for="item in $store.cart.items" :key="item.lineKey">
+                        <template x-for="item in $store.cart.displayItems" :key="item.lineKey">
                             <div class="flex gap-3">
                                 <div class="w-14 h-14 rounded-lg overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
                                     <img :src="item.image" :alt="item.name" class="w-full h-full object-cover">
@@ -129,7 +129,7 @@
                                     </p>
                                     <p class="text-xs text-gray-500 mt-0.5">Qty: <span x-text="item.quantity"></span></p>
                                 </div>
-                                <p class="text-sm font-bold text-navy-900 shrink-0" x-text="EMPIRE_STORE.formatPrice(item.price * item.quantity)"></p>
+                                <p class="text-sm font-bold text-navy-900 shrink-0" x-text="EMPIRE_STORE.formatPrice($store.cart.unitPrice(item) * item.quantity)"></p>
                             </div>
                         </template>
                     </div>

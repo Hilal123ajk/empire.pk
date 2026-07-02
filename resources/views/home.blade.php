@@ -49,7 +49,7 @@
     <div class="max-w-7xl mx-auto px-4 py-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             @foreach([
-                ['icon' => 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4', 'title' => 'Free Delivery', 'sub' => 'Orders above Rs. 2,500'],
+                ['icon' => 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4', 'title' => 'Free Delivery', 'sub' => 'Cases & covers above Rs. 2,500'],
                 ['icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'title' => 'Genuine Products', 'sub' => '100% Authentic'],
                 ['icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 'title' => 'Cash on Delivery', 'sub' => 'Pay when you receive'],
                 ['icon' => 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15', 'title' => 'Easy Returns', 'sub' => '7-day return policy'],
@@ -165,13 +165,13 @@
 </section>
 
 {{-- Promo banner --}}
-<section class="max-w-7xl mx-auto px-4 py-10 md:py-14">
+<section class="max-w-7xl mx-auto px-4 py-12 md:py-14">
     <div class="relative rounded-3xl overflow-hidden bg-navy-900">
-        <img src="https://images.unsplash.com/photo-1601784551445-20c9e3ced8ca?w=1400&h=400&fit=crop" alt="Phone cases collection" class="w-full h-48 md:h-64 object-cover opacity-40">
-        <div class="absolute inset-0 flex items-center justify-center text-center p-6">
+        <img src="https://images.unsplash.com/photo-1601784551445-20c9e3ced8ca?w=1400&h=400&fit=crop" alt="Phone cases collection" class="w-full h-56 sm:h-60 md:h-64 object-cover opacity-40">
+        <div class="absolute inset-0 flex items-center justify-center text-center px-6 py-12 sm:px-8 sm:py-14 md:p-6">
             <div>
-                <h2 class="text-2xl md:text-4xl font-extrabold text-white mb-2">Protect Your Phone in Style</h2>
-                <p class="text-gray-300 text-sm md:text-base mb-6 max-w-md mx-auto">Premium cases from Spigen, UAG, and more — starting at Rs. 899</p>
+                <h2 class="text-2xl md:text-4xl font-extrabold text-white mb-3 md:mb-2">Protect Your Phone in Style</h2>
+                <p class="text-gray-300 text-sm md:text-base mb-6 md:mb-6 max-w-md mx-auto leading-relaxed">Premium cases from Spigen, UAG, and more — starting at Rs. 899</p>
                 <a href="{{ route('store.collections.show', 'phone-cases') }}" class="inline-flex px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-bold rounded-xl transition">Shop Cases</a>
             </div>
         </div>
@@ -182,18 +182,22 @@
 <section class="max-w-7xl mx-auto px-4 pb-14">
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl md:text-3xl font-extrabold text-navy-900">New Arrivals</h2>
-        <a href="{{ route('store.products.index', ['sort' => 'featured']) }}" class="text-sm font-semibold text-empire-600 hover:text-empire-700 transition">View All →</a>
+        <a href="{{ route('store.products.index') }}" class="text-sm font-semibold text-empire-600 hover:text-empire-700 transition">View All →</a>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-        <template x-for="product in EMPIRE_STORE.newArrivals" :key="'new-'+product.id">
-            <a :href="'/products/' + product.slug" class="bg-white rounded-2xl border border-gray-200 p-3 hover:shadow-md transition group">
-                <div class="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3">
-                    <img :src="product.image" :alt="product.name" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
-                </div>
-                <p class="text-xs font-semibold text-navy-900 line-clamp-2" x-text="product.name"></p>
-                <p class="text-sm font-bold text-empire-600 mt-1" x-text="EMPIRE_STORE.formatPrice(product.price)"></p>
-            </a>
-        </template>
+        @forelse ($newArrivals as $product)
+        <a href="{{ route('store.products.show', $product['slug']) }}" class="bg-white rounded-2xl border border-gray-200 p-3 hover:shadow-md transition group">
+            <div class="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3 flex items-center justify-center">
+                <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" class="max-w-full max-h-full w-full h-full object-contain group-hover:scale-105 transition-transform">
+            </div>
+            <p class="text-xs font-semibold text-navy-900 line-clamp-2">{{ $product['name'] }}</p>
+            <p class="text-sm font-bold text-empire-600 mt-1">Rs. {{ number_format($product['price'], 0) }}</p>
+        </a>
+        @empty
+        <div class="col-span-full text-center py-8 text-gray-500 text-sm">
+            No new products in the last 30 days. Check back soon!
+        </div>
+        @endforelse
     </div>
 </section>
 @endsection

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\StoreCatalogService;
+use App\Support\DeliveryPolicy;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -25,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
                 'storeCatalogCategories' => $catalog->getCategoriesForStore(),
                 'storeCatalogProducts' => $catalog->getProductsForStore(),
                 'storeCatalogBrands' => $catalog->getBrandsForStore(),
+                'storeDeliveryConfig' => DeliveryPolicy::frontendConfig(),
             ]);
         });
 

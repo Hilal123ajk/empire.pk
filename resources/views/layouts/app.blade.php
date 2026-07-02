@@ -21,69 +21,7 @@
     @endphp
     <x-seo-meta :seo="$resolvedSeo" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-                    colors: {
-                        empire: {
-                            50: '#fffbeb',
-                            100: '#fef3c7',
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                            700: '#b45309',
-                            900: '#78350f',
-                        },
-                        navy: {
-                            800: '#1e293b',
-                            900: '#0f172a',
-                            950: '#020617',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        [x-cloak] { display: none !important; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .store-select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-color: #fff;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.85rem center;
-            background-size: 1rem 1rem;
-            padding-right: 2.75rem;
-            cursor: pointer;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        .store-select:hover {
-            border-color: #cbd5e1;
-        }
-        .store-select:focus {
-            outline: none;
-            border-color: transparent;
-            box-shadow: 0 0 0 2px #f59e0b;
-        }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('head')
 </head>
@@ -116,9 +54,13 @@
         window.EMPIRE_STORE.categories = @json($storeCatalogCategories ?? []);
         window.EMPIRE_STORE.products = @json($storeCatalogProducts ?? []);
         window.EMPIRE_STORE.brands = @json($storeCatalogBrands ?? []);
+        window.EMPIRE_STORE.delivery = @json($storeDeliveryConfig ?? \App\Support\DeliveryPolicy::frontendConfig());
+        @if (! empty($heroBanners))
+        window.EMPIRE_STORE.banners = @json($heroBanners);
+        @endif
     </script>
     <script src="{{ asset('js/store-app.js') }}"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

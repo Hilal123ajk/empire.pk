@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Store;
 use App\Http\Controllers\Controller;
 use App\Services\StoreCatalogService;
 use App\Support\SeoMeta;
+use App\Support\StoreBanners;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -21,6 +22,8 @@ class HomeController extends Controller
 
         return view('home', [
             'featuredProducts' => $featuredProducts,
+            'newArrivals' => $this->catalog->getNewArrivals(5),
+            'heroBanners' => StoreBanners::heroSlides(),
             'seo' => SeoMeta::defaults(route('store.home')),
         ]);
     }

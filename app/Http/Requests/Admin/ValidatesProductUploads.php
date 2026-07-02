@@ -43,9 +43,29 @@ trait ValidatesProductUploads
             if (is_array($this->file('gallery_images'))) {
                 foreach ($this->file('gallery_images') as $index => $file) {
                     if ($file instanceof UploadedFile && ! $file->isValid()) {
+                        $label = $this->boolean('has_variants') ? 'Color image' : 'Gallery image';
                         $validator->errors()->add(
                             "gallery_images.{$index}",
-                            $this->uploadErrorMessage($file, 'Color image')
+                            $this->uploadErrorMessage($file, $label)
+                        );
+                    }
+                }
+            }
+
+            if ($this->boolean('has_variants') && is_array($this->file('gallery_images'))) {
+                $labels = $this->input('gallery_labels', []);
+
+                foreach ($this->file('gallery_images') as $index => $file) {
+                    if (! $file instanceof UploadedFile || ! $file->isValid()) {
+                        continue;
+                    }
+
+                    $label = is_array($labels) ? trim((string) ($labels[$index] ?? '')) : '';
+
+                    if ($label === '') {
+                        $validator->errors()->add(
+                            "gallery_labels.{$index}",
+                            'A color name is required for each variant image.'
                         );
                     }
                 }

@@ -32,6 +32,7 @@ class StoreProductRequest extends FormRequest
             'meta_keywords' => ['nullable', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
             'is_featured' => ['sometimes', 'boolean'],
+            'has_variants' => ['sometimes', 'boolean'],
         ], $this->galleryRules());
     }
 
@@ -40,6 +41,7 @@ class StoreProductRequest extends FormRequest
         $this->merge([
             'is_active' => $this->boolean('is_active'),
             'is_featured' => $this->boolean('is_featured'),
+            'has_variants' => $this->boolean('has_variants'),
             'brand_id' => $this->input('brand_id') ?: null,
         ]);
     }
