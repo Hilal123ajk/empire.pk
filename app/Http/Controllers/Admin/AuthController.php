@@ -48,7 +48,8 @@ class AuthController extends Controller
         if ($this->otp->requiresVerification($user)) {
             $this->otp->markSessionPending($user->id, $request->boolean('remember'));
 
-            SendAdminLoginOtp::dispatch($user->id)->afterResponse();
+            $otp = $this->otp->issueOtp($user);
+            SendAdminLoginOtp::dispatch($user->id, $otp);
 
             return redirect()
                 ->route('admin.login.verify')
@@ -127,8 +128,10 @@ class AuthController extends Controller
             return redirect()->route('admin.login');
         }
 
+        $otp = $this->otp->issueOtp($user);
+
         try {
-            SendAdminLoginOtp::dispatch($user->id)->afterResponse();
+            SendAdminLoginOtp::dispatch($user->id, $otp);
         } catch (\Throwable) {
             return back()->withErrors(['otp' => 'Unable to resend verification code. Try again shortly.']);
         }

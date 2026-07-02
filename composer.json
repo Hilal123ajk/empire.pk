@@ -42,6 +42,9 @@
             "node scripts/copy-vendor.js",
             "npm run build"
         ],
+        "queue": [
+            "php artisan queue:work database --sleep=1 --tries=3 --timeout=90"
+        ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php -d upload_max_filesize=15M -d post_max_size=64M -d max_file_uploads=20 artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"

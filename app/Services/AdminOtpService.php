@@ -26,7 +26,7 @@ class AdminOtpService
         return $user->admin_otp_verified_at->lt(now()->subDays($validDays));
     }
 
-    public function sendOtp(User $user): void
+    public function issueOtp(User $user): string
     {
         $otp = (string) random_int(10000, 99999);
         $ttlMinutes = (int) config('empire.admin_otp_expiry_minutes', 15);
@@ -36,6 +36,14 @@ class AdminOtpService
             Hash::make($otp),
             now()->addMinutes($ttlMinutes),
         );
+
+        return $otp;
+    }
+
+    public function sendOtp(User $user): void
+    {
+        $otp = $this->issueOtp($user);
+        $ttlMinutes = (int) config('empire.admin_otp_expiry_minutes', 15);
 
         Mail::to($user->email)->send(new AdminLoginOtpMail(
             userName: $user->name,
