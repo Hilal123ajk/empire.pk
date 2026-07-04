@@ -293,6 +293,59 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    Alpine.data('newsletterForm', () => ({
+        email: '',
+        loading: false,
+
+        async subscribe() {
+            if (this.loading || !this.email) return;
+
+            this.loading = true;
+
+            try {
+                const response = await fetch(window.EMPIRE_STORE.newsletterUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({ email: this.email }),
+                });
+
+                const data = await response.json();
+
+                if (response.status === 429) {
+                    window.dispatchEvent(new CustomEvent('empire-toast', {
+                        detail: { message: 'Too many requests. Please wait a moment and try again.' },
+                    }));
+                    return;
+                }
+
+                if (!response.ok || !data.success) {
+                    const validationMessage = data.errors
+                        ? Object.values(data.errors).flat()[0]
+                        : null;
+                    window.dispatchEvent(new CustomEvent('empire-toast', {
+                        detail: { message: data.message || validationMessage || 'Unable to subscribe. Please try again.' },
+                    }));
+                    return;
+                }
+
+                window.dispatchEvent(new CustomEvent('empire-toast', {
+                    detail: { message: data.message },
+                }));
+                this.email = '';
+            } catch {
+                window.dispatchEvent(new CustomEvent('empire-toast', {
+                    detail: { message: 'Network error. Please try again.' },
+                }));
+            } finally {
+                this.loading = false;
+            }
+        },
+    }));
+
     Alpine.data('checkoutForm', () => ({
         firstName: '',
         lastName: '',

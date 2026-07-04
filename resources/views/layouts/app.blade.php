@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" href="{{ asset('images/favicon.png') }}" type="image/png">
 
     @php
         $resolvedSeo = $seo ?? null;
@@ -51,6 +52,7 @@
     <script src="{{ asset('js/store-data.js') }}"></script>
     <script>
         window.EMPIRE_STORE.checkoutUrl = @json(route('store.checkout.store'));
+        window.EMPIRE_STORE.newsletterUrl = @json(route('store.newsletter.subscribe'));
         window.EMPIRE_STORE.categories = @json($storeCatalogCategories ?? []);
         window.EMPIRE_STORE.products = @json($storeCatalogProducts ?? []);
         window.EMPIRE_STORE.brands = @json($storeCatalogBrands ?? []);

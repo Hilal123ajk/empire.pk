@@ -7,11 +7,13 @@
                     <h3 class="text-xl font-bold text-white mb-1">Subscribe to our Newsletter</h3>
                     <p class="text-sm text-gray-400">Get the latest deals on mobile accessories</p>
                 </div>
-                <form class="flex w-full md:w-auto gap-2" onsubmit="event.preventDefault(); alert('Thanks for subscribing! (Demo)');">
-                    <input type="email" placeholder="Your email address" required
-                           class="flex-1 md:w-72 px-4 py-3 bg-navy-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-empire-500">
-                    <button type="submit" class="px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-semibold rounded-xl text-sm transition whitespace-nowrap">
-                        Subscribe
+                <form x-data="newsletterForm()" @submit.prevent="subscribe" class="flex w-full md:w-auto gap-2">
+                    <input type="email" x-model="email" placeholder="Your email address" required
+                           :disabled="loading"
+                           class="flex-1 md:w-72 px-4 py-3 bg-navy-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-empire-500 disabled:opacity-60">
+                    <button type="submit" :disabled="loading"
+                            class="px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-semibold rounded-xl text-sm transition whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span x-text="loading ? 'Please wait…' : 'Subscribe'"></span>
                     </button>
                 </form>
             </div>
@@ -45,19 +47,18 @@
                     <li><a href="{{ route('store.categories.index') }}" class="hover:text-empire-400 transition">Shop Categories</a></li>
                     <li><a href="{{ route('store.products.index') }}" class="hover:text-empire-400 transition">All Products</a></li>
                     <li><a href="{{ route('store.products.index', ['sort' => 'discount']) }}" class="hover:text-empire-400 transition">Deals & Offers</a></li>
-                    <li><a href="#" class="hover:text-empire-400 transition">About Us</a></li>
-                    <li><a href="#" class="hover:text-empire-400 transition">Contact Us</a></li>
+                    <li><a href="{{ route('store.pages.about') }}" class="hover:text-empire-400 transition">About Us</a></li>
+                    <li><a href="{{ route('store.pages.contact') }}" class="hover:text-empire-400 transition">Contact Us</a></li>
                 </ul>
             </div>
 
             <div>
                 <h4 class="text-white font-semibold mb-4">Customer Service</h4>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-empire-400 transition">Shipping Policy</a></li>
-                    <li><a href="#" class="hover:text-empire-400 transition">Returns & Exchange</a></li>
-                    <li><a href="#" class="hover:text-empire-400 transition">Cash on Delivery</a></li>
-                    <li><a href="#" class="hover:text-empire-400 transition">FAQs</a></li>
-                    <li><a href="#" class="hover:text-empire-400 transition">Privacy Policy</a></li>
+                    <li><a href="{{ route('store.pages.shipping') }}" class="hover:text-empire-400 transition">Shipping Policy</a></li>
+                    <li><a href="{{ route('store.pages.returns') }}" class="hover:text-empire-400 transition">Returns & Exchange</a></li>
+                    <li><a href="{{ route('store.pages.shipping') }}" class="hover:text-empire-400 transition">Cash on Delivery</a></li>
+                    <li><a href="{{ route('store.pages.faqs') }}" class="hover:text-empire-400 transition">FAQs</a></li>
                 </ul>
             </div>
 
@@ -67,20 +68,20 @@
                     <li class="flex items-start gap-2">
                         <svg class="w-5 h-5 text-empire-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                         <div>
-                            <p class="text-white font-medium">042-111-EMPIRE</p>
-                            <p class="text-gray-500 text-xs">9 AM – 9 PM</p>
+                            <a href="tel:+923233790913" class="text-white font-medium hover:text-empire-400 transition">+92 323 3790913</a>
+                            <p class="text-gray-500 text-xs">Call or SMS</p>
                         </div>
                     </li>
                     <li class="flex items-start gap-2">
                         <svg class="w-5 h-5 text-empire-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                         <div>
-                            <p class="text-white font-medium">0300-1234567</p>
+                            <a href="https://wa.me/923233790913" target="_blank" rel="noopener noreferrer" class="text-white font-medium hover:text-empire-400 transition">+92 323 3790913</a>
                             <p class="text-gray-500 text-xs">WhatsApp</p>
                         </div>
                     </li>
                     <li class="flex items-start gap-2">
                         <svg class="w-5 h-5 text-empire-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        <p>hello@empire.pk</p>
+                        <a href="mailto:contact.empire.pk@gmail.com" class="hover:text-empire-400 transition break-all">contact.empire.pk@gmail.com</a>
                     </li>
                 </ul>
             </div>
@@ -95,7 +96,7 @@
                 <span>•</span>
                 <span>Secure Shopping</span>
                 <span>•</span>
-                <span>7-Day Returns</span>
+                <span>Easy Returns</span>
             </div>
         </div>
     </div>
