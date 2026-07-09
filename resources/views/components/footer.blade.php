@@ -2,17 +2,17 @@
     {{-- Newsletter --}}
     <div class="border-b border-gray-800">
         <div class="max-w-7xl mx-auto px-4 py-10">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div class="text-center md:text-left">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6 w-full min-w-0">
+                <div class="text-center md:text-left shrink-0">
                     <h3 class="text-xl font-bold text-white mb-1">Subscribe to our Newsletter</h3>
                     <p class="text-sm text-gray-400">Get the latest deals on mobile accessories</p>
                 </div>
-                <form x-data="newsletterForm()" @submit.prevent="subscribe" class="flex w-full md:w-auto gap-2">
+                <form x-data="newsletterForm()" @submit.prevent="subscribe" class="flex w-full md:w-auto max-w-full min-w-0 gap-2">
                     <input type="email" x-model="email" placeholder="Your email address" required
                            :disabled="loading"
-                           class="flex-1 md:w-72 px-4 py-3 bg-navy-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-empire-500 disabled:opacity-60">
+                           class="min-w-0 flex-1 md:w-72 px-3 sm:px-4 py-3 bg-navy-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-empire-500 disabled:opacity-60">
                     <button type="submit" :disabled="loading"
-                            class="px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-semibold rounded-xl text-sm transition whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed">
+                            class="shrink-0 px-4 sm:px-6 py-3 bg-empire-500 hover:bg-empire-600 text-navy-900 font-semibold rounded-xl text-sm transition whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed">
                         <span x-text="loading ? 'Please wait…' : 'Subscribe'"></span>
                     </button>
                 </form>
@@ -62,26 +62,26 @@
                 </ul>
             </div>
 
-            <div>
+            <div class="col-span-2 md:col-span-1 min-w-0">
                 <h4 class="text-white font-semibold mb-4">Contact Us</h4>
                 <ul class="space-y-3 text-sm">
-                    <li class="flex items-start gap-2">
+                    <li class="flex items-start gap-3">
                         <svg class="w-5 h-5 text-empire-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                        <div>
-                            <a href="tel:+923233790913" class="text-white font-medium hover:text-empire-400 transition">+92 323 3790913</a>
+                        <div class="min-w-0 flex-1">
+                            <a href="tel:+923233790913" class="text-white font-medium hover:text-empire-400 transition whitespace-nowrap">+92 323 3790913</a>
                             <p class="text-gray-500 text-xs">Call or SMS</p>
                         </div>
                     </li>
-                    <li class="flex items-start gap-2">
+                    <li class="flex items-start gap-3">
                         <svg class="w-5 h-5 text-empire-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                        <div>
-                            <a href="https://wa.me/923233790913" target="_blank" rel="noopener noreferrer" class="text-white font-medium hover:text-empire-400 transition">+92 323 3790913</a>
+                        <div class="min-w-0 flex-1">
+                            <a href="https://wa.me/923233790913" target="_blank" rel="noopener noreferrer" class="text-white font-medium hover:text-empire-400 transition whitespace-nowrap">+92 323 3790913</a>
                             <p class="text-gray-500 text-xs">WhatsApp</p>
                         </div>
                     </li>
-                    <li class="flex items-start gap-2">
+                    <li class="flex items-start gap-3">
                         <svg class="w-5 h-5 text-empire-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        <a href="mailto:contact.empire.pk@gmail.com" class="hover:text-empire-400 transition break-all">contact.empire.pk@gmail.com</a>
+                        <a href="mailto:contact.empire.pk@gmail.com" class="min-w-0 flex-1 hover:text-empire-400 transition break-words">contact.empire.pk@gmail.com</a>
                     </li>
                 </ul>
             </div>
@@ -90,12 +90,12 @@
 
     <div class="border-t border-gray-800">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-            <p>&copy; {{ date('Y') }} Empire.pk — All Rights Reserved</p>
-            <div class="flex items-center gap-4">
+            <p class="text-center">&copy; {{ date('Y') }} Empire.pk — All Rights Reserved</p>
+            <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
                 <span>Cash on Delivery</span>
-                <span>•</span>
+                <span aria-hidden="true">•</span>
                 <span>Secure Shopping</span>
-                <span>•</span>
+                <span aria-hidden="true">•</span>
                 <span>Easy Returns</span>
             </div>
         </div>

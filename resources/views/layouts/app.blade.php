@@ -26,7 +26,7 @@
 
     @stack('head')
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans antialiased" x-data="toast()" x-cloak>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased overflow-x-hidden" x-data="toast()" x-cloak>
     @include('components.header')
 
     <main>

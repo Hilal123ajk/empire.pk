@@ -46,20 +46,20 @@
 
 {{-- Trust badges --}}
 <section class="bg-white border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 py-4">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div class="flex justify-between items-start gap-1 sm:gap-4">
             @foreach([
                 ['icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'title' => 'Genuine Products', 'sub' => '100% Authentic'],
                 ['icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', 'title' => 'Cash on Delivery', 'sub' => 'Pay when you receive'],
                 ['icon' => 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15', 'title' => 'Easy Returns', 'sub' => '7-day return policy'],
             ] as $badge)
-            <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 p-2">
-                <div class="w-10 h-10 bg-empire-100 rounded-xl flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5 text-empire-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $badge['icon'] }}"/></svg>
+            <div class="flex flex-1 flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 px-0.5 sm:p-2">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-empire-100 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-empire-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $badge['icon'] }}"/></svg>
                 </div>
-                <div class="text-center sm:text-left">
-                    <p class="text-sm font-semibold text-navy-900">{{ $badge['title'] }}</p>
-                    <p class="text-xs text-gray-500">{{ $badge['sub'] }}</p>
+                <div class="text-center sm:text-left min-w-0">
+                    <p class="text-[10px] leading-tight sm:text-sm font-semibold text-navy-900">{{ $badge['title'] }}</p>
+                    <p class="text-[9px] leading-tight sm:text-xs text-gray-500 mt-0.5">{{ $badge['sub'] }}</p>
                 </div>
             </div>
             @endforeach
